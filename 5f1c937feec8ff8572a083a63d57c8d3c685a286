@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efe2e746_257e46e9",
+        "filename": ".gitreview",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000014
+      },
+      "writtenOn": "2020-01-30T00:45:58Z",
+      "side": 1,
+      "message": "all this extra whitespace doesn\u0027t quite look right.  Is it cool to edit this?",
+      "revId": "5f1c937feec8ff8572a083a63d57c8d3c685a286",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
