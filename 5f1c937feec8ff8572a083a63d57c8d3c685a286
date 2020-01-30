@@ -16,6 +16,29 @@
       "revId": "5f1c937feec8ff8572a083a63d57c8d3c685a286",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2acc2489_67464489",
+        "filename": ".gitreview",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000014
+      },
+      "writtenOn": "2020-01-30T11:12:45Z",
+      "side": 1,
+      "message": "asd\u003dasdf?  This I will remove.",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "5f1c937feec8ff8572a083a63d57c8d3c685a286",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
     }
   ]
 }
