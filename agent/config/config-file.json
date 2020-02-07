@@ -1,0 +1,32 @@
+{
+    "local": {
+        "host": ":8080"
+    },
+    "logger": {
+        "level": 4
+    },
+    "rmr": {
+        "protPort": "tcp:4560",
+        "maxSize": 65536,
+        "numWorkers": 1
+    },
+    "sbi": {
+        "appmgrService": "service-ricplt-appmgr-http:8080",
+        "baseUrl": "/ric/v1",
+        "proto": "http",
+        "timeout": 30
+    },
+    "nbi": {
+        "schemas": ["o-ran-sc-ric-xapp-desc-v1", "o-ran-sc-ric-ueec-config-v1"],
+        "modulePath": "/opt/ric/yang/",
+        "moduleFile": "ric-model.yang",
+        "xpaths": {
+            "xapp": "/ric-model:ric/xapps//*",
+            "config": "/ric-model:ric/config//*",
+            "data":"/ric-model:ric/xapps/status"
+        }
+    },
+    "controls": {
+        "active": true
+    }
+}

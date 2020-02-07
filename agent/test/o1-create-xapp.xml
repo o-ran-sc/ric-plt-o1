@@ -1,0 +1,10 @@
+<ric xmlns="urn:o-ran:ric:xapp-desc:1.0">
+    <xapps xmlns="urn:o-ran:ric:xapp-desc:1.0">
+        <xapp xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0" xc:operation="create">
+            <name>ueec</name>
+            <release-name>ueec-xapp</release-name>
+            <version>0.0.1</version>
+            <namespace>ricxapp</namespace>
+        </xapp>
+    </xapps>    
+</ric>

@@ -1,0 +1,16 @@
+newrt|start
+rte|12011|localhost:4560
+rte|12012|localhost:4560
+rte|12021|localhost:4560
+rte|12022|localhost:4560
+rte|12050|localhost:4560
+rte|12010|localhost:4560
+rte|12020|localhost:4560
+rte|10270|localhost:4560
+rte|10271|localhost:4560
+rte|10272|localhost:4560
+rte|10280|localhost:4560
+rte|10050|localhost:4560
+rte|10350|localhost:4560
+newrt|end
+

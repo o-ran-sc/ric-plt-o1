@@ -1,0 +1,228 @@
+/*
+==================================================================================
+  Copyright (c) 2019 AT&T Intellectual Property.
+  Copyright (c) 2019 Nokia
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+==================================================================================
+*/
+
+package nbi
+
+import (	
+	"time"
+	"errors"
+	"fmt"
+	"strings"
+	"unsafe"
+	"encoding/json"
+	"github.com/spf13/viper"
+	"github.com/valyala/fastjson"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
+)
+
+/*
+#cgo LDFLAGS: -lsysrepo -lyang
+
+#include <stdio.h>
+#include <limits.h>
+#include <sysrepo.h>
+#include <sysrepo/values.h>
+#include "helper.h"
+*/
+import "C"
+
+var sbiClient sbi.SBIClientInterface
+var nbiClient *Nbi
+var log = xapp.Logger
+
+func NewNbi(s sbi.SBIClientInterface) *Nbi {
+	sbiClient = s
+
+	nbiClient = &Nbi{
+		schemas:  viper.GetStringSlice("nbi.schemas"),
+		cleanupChan: make(chan bool),
+	}
+	return nbiClient
+}
+
+func (n *Nbi) Start() bool {
+	if ok := n.Setup(n.schemas); !ok {
+		log.Error("NBI: SYSREPO initialization failed, bailing out!")
+		return false
+	}
+	log.Info("NBI: SYSREPO initialization done ... processing O1 requests!")
+
+	return true
+}
+
+func (n *Nbi) Stop() {	
+	C.sr_unsubscribe(n.subscription)
+	C.sr_session_stop(n.session)
+	C.sr_disconnect(n.connection)
+
+	log.Info("NBI: SYSREPO cleanup done gracefully!")
+}
+
+func (n *Nbi) Setup(schemas []string) bool {
+	rc := C.sr_connect(0, &n.connection)
+	if C.SR_ERR_OK != rc {
+		log.Error("NBI: sr_connect failed: %s", C.GoString(C.sr_strerror(rc)))
+		return false
+	}
+
+	rc = C.sr_session_start(n.connection, C.SR_DS_RUNNING, &n.session)
+	if C.SR_ERR_OK != rc {
+		log.Error("NBI: sr_session_start failed: %s", C.GoString(C.sr_strerror(rc)))
+		return false
+	}
+
+	for {
+		if ok := n.DoSubscription(schemas); ok == true {
+			break
+		}
+		time.Sleep(time.Duration(5 * time.Second))
+	}
+	return true
+}
+
+func (n *Nbi) DoSubscription(schemas []string) bool {
+	log.Info("Subscribing YANG modules ... %v", schemas)
+	for _, module := range schemas {
+		modName := C.CString(module)
+		defer C.free(unsafe.Pointer(modName))
+
+		if done := n.SubscribeModule(modName); !done {
+			return false
+		}
+	}
+	return true
+}
+
+func (n *Nbi) SubscribeModule(module *C.char) bool {
+	rc := C.sr_module_change_subscribe(n.session, module, nil, C.sr_module_change_cb(C.module_change_cb), nil, 0, 0, &n.subscription)
+	if C.SR_ERR_OK != rc {
+		log.Info("NBI: sr_module_change_subscribe failed: %s", C.GoString(C.sr_strerror(rc)))
+		return false
+	}
+	return true
+}
+
+//export nbiModuleChangeCB
+func nbiModuleChangeCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, event C.sr_event_t, reqId C.int) C.int {
+	changedModule := C.GoString(module)
+	changedXpath := C.GoString(xpath)
+
+	log.Info("NBI: Module change callback - event='%d' module=%s xpath=%s reqId=%d", event, changedModule, changedXpath, reqId)
+
+	if C.SR_EV_CHANGE == event {
+		configJson := C.yang_data_sr2json(session, module, event, &nbiClient.oper)
+		err := nbiClient.ManageXapps(changedModule, C.GoString(configJson), int(nbiClient.oper))
+		if err != nil {
+			return C.SR_ERR_OPERATION_FAILED
+		}
+	}
+
+	if C.SR_EV_DONE == event {
+		configJson := C.get_data_json(session, module)
+		err := nbiClient.ManageConfigmaps(changedModule, C.GoString(configJson), int(nbiClient.oper))
+		if err != nil {
+			return C.SR_ERR_OPERATION_FAILED
+		}
+	}
+
+	return C.SR_ERR_OK
+}
+
+func (n *Nbi) ManageXapps(module, configJson string, oper int) error {
+	log.Info("ManageXapps: module=%s configJson=%s", module, configJson)
+
+	if configJson == "" || module != "o-ran-sc-ric-xapp-desc-v1" {
+		return nil
+	}
+
+	root := fmt.Sprintf("%s:ric", module)
+	jsonList, err := n.ParseJsonArray(configJson, root, "xapps", "xapp")
+	if err != nil {
+		return err
+	}
+
+	for _, m := range jsonList {
+		xappName := string(m.GetStringBytes("name"))
+		namespace := string(m.GetStringBytes("namespace"))
+		relName := string(m.GetStringBytes("release-name"))
+		version := string(m.GetStringBytes("version"))
+
+		desc := sbiClient.BuildXappDescriptor(xappName, namespace, relName, version)
+		switch oper {
+			case C.SR_OP_CREATED:
+				return sbiClient.DeployXapp(desc)
+			case C.SR_OP_DELETED:
+				return sbiClient.UndeployXapp(desc)
+			default:
+				return errors.New(fmt.Sprintf("Operation '%d' not supported!", oper))
+		}
+	}
+	return nil
+}
+
+func (n *Nbi) ManageConfigmaps(module, configJson string, oper int) error {
+	log.Info("ManageConfig: module=%s configJson=%s", module, configJson)
+	
+	if configJson == "" || module != "o-ran-sc-ric-ueec-config-v1" {
+		return nil
+	}
+
+	if oper != C.SR_OP_MODIFIED {
+		return errors.New(fmt.Sprintf("Operation '%d' not supported!", oper))
+	}
+
+	value, err := n.ParseJson(configJson)
+	if err != nil {
+		return err
+	}
+
+	root := fmt.Sprintf("%s:ric", module)
+	appName := string(value.GetStringBytes(root, "config", "name"))
+	namespace := string(value.GetStringBytes(root, "config", "namespace"))
+	control := value.Get(root, "config", "control").String()
+
+	var f interface{}
+	err = json.Unmarshal([]byte(strings.ReplaceAll(control, "\\", "")), &f)
+	if err != nil {
+		log.Info("json.Unmarshal failed: %v", err)
+		return err
+	}
+
+	xappConfig := sbiClient.BuildXappConfig(appName, namespace, f)
+	return sbiClient.ModifyXappConfig(xappConfig)
+}
+
+func (n *Nbi) ParseJson(dsContent string) (*fastjson.Value, error) {
+	var p fastjson.Parser
+	v, err := p.Parse(dsContent)
+	if err != nil {
+		log.Info("fastjson.Parser failed: %v", err)
+	}
+	return v, err
+}
+
+func (n *Nbi) ParseJsonArray(dsContent, model, top, elem string) ([]*fastjson.Value, error) {
+	v, err := n.ParseJson(dsContent)
+	if err != nil {
+		return nil, err
+	}
+	return v.GetArray(model, top, elem), nil
+}

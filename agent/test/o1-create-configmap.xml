@@ -1,0 +1,15 @@
+<ric xmlns="urn:o-ran:ric:ueec-config:1.0">
+    <config xmlns="urn:o-ran:ric:ueec-config:1.0" xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0" xc:operation="replace">
+            <name>ueec</name>
+            <namespace>ricxapp</namespace>
+            <control>
+                <active>true</active>
+                <interfaceId>
+                    <globalENBId>
+                        <plmnId>1214</plmnId>
+                        <eNBId>66</eNBId>
+                    </globalENBId>
+                </interfaceId>
+            </control>
+    </config>
+</ric>
