@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8350dc0_f6fcb61b",
+        "filename": "agent/yang/o-ran-sc-ric-ueec-config-v1.yang",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000014
+      },
+      "writtenOn": "2020-02-14T15:43:35Z",
+      "side": 1,
+      "message": "Perhaps this should be www.o-ran-sc.org for the software community?  Not entirely certain what you wish to put here, but o-ran.org is definitely the website of the ORAN alliance, not the s/w comm.",
+      "range": {
+        "startLine": 9,
+        "startChar": 9,
+        "endLine": 9,
+        "endChar": 22
+      },
+      "revId": "f0347270cb8bb359cf43af09d2a6ec89ee75630b",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e392e88_72dc4d80",
+        "filename": "agent/yang/o-ran-sc-ric-ueec-config-v1.yang",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000014
+      },
+      "writtenOn": "2020-02-14T15:43:35Z",
+      "side": 1,
+      "message": "Ok here you\u0027ve used Alliance.",
+      "range": {
+        "startLine": 13,
+        "startChar": 27,
+        "endLine": 13,
+        "endChar": 41
+      },
+      "revId": "f0347270cb8bb359cf43af09d2a6ec89ee75630b",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
