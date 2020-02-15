@@ -93,3 +93,17 @@ char * get_data_json(sr_session_ctx_t *session, const char *module_name) {
 sr_val_t *get_val(sr_val_t *val, size_t i) {
 	return &val[i];
 }
+
+int gnb_status_cb(sr_session_ctx_t *session, const char *module_name, const char *xpath, const char *req_xpath, uint32_t req_id, struct lyd_node **parent, void *private_data) {
+    return nbiGnbStateCB(session, (char *)module_name, (char *)xpath, (char *)req_xpath, req_id, (char **)parent);
+}
+
+void create_new_path(sr_session_ctx_t *session, char **parent, char *key, char *value) {
+    struct lyd_node **p = (struct lyd_node **)parent;
+
+    if (*parent == NULL) {
+        *p = lyd_new_path(NULL, sr_get_context(sr_session_get_connection(session)), key, value, 0, 0);
+    } else {
+        lyd_new_path(*p, sr_get_context(sr_session_get_connection(session)), key, value, 0, 0);
+    }
+}

@@ -5,6 +5,11 @@
     "logger": {
         "level": 4
     },
+    "db": {
+        "host": "localhost",
+        "port": 6379,
+        "namespaces": ["sdl", "rnib"]
+    },
     "rmr": {
         "protPort": "tcp:4560",
         "maxSize": 65536,

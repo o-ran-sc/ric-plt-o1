@@ -31,7 +31,7 @@ type Nbi struct {
 	schemas      []string
 	connection   *C.sr_conn_ctx_t
 	session      *C.sr_session_ctx_t
-  subscription *C.sr_subscription_ctx_t
-  oper          C.sr_change_oper_t
+	subscription *C.sr_subscription_ctx_t
+	oper         C.sr_change_oper_t
 	cleanupChan  chan bool
 }

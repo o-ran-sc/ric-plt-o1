@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 #----------------------------------------------------------
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:2-u18.04-nng AS o2mediator-build
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:2-u18.04-nng AS o1mediator-build
 
 RUN apt-get update -y && apt-get install -y jq \
       git \
@@ -70,7 +70,7 @@ RUN \
       cd /opt/dev && \
       git clone https://github.com/sysrepo/sysrepo.git && \
       cd sysrepo && mkdir build && cd build && \
-      cmake -DCMAKE_BUILD_TYPE:String="Release" -DSR_RPC_CB_TIMEOUT=30000 -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/etc/sysrepo .. && \
+      cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/etc/sysrepo .. && \
       make -j2 && \
       make install && make sr_clean && \
       ldconfig
@@ -90,7 +90,7 @@ RUN \
       cd /opt/dev && \
       git clone https://github.com/CESNET/Netopeer2.git && \
       cd Netopeer2/server && mkdir build && cd build && \
-      cmake -DCMAKE_BUILD_TYPE:String="Release" .. && \
+      cmake -DCMAKE_BUILD_TYPE:String="Release" -DNP2SRV_DATA_CHANGE_TIMEOUT=30000 -DNP2SRV_DATA_CHANGE_WAIT=ON .. && \
       make -j2 && \
       make install && \
       cd ../../cli && mkdir build && cd build && \
@@ -101,7 +101,7 @@ RUN \
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=1.11.0
+ARG RMRVERSION=3.1.0
 ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
 ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
@@ -118,31 +118,30 @@ RUN cd /go/bin \
     && chmod +x swagger
 
 RUN mkdir -p /go/src/ws
+COPY . /go/src/ws
 WORKDIR "/go/src/ws/agent"
 
 # Module prepare (if go.mod/go.sum updated)
-COPY agent /go/src/ws
 RUN GO111MODULE=on go mod download
 
+# Fetch xApp Manager REST API spec
 RUN mkdir -p api \
     && mkdir -p pkg \
     && git clone "https://gerrit.o-ran-sc.org/r/ric-plt/appmgr" \
     && cp appmgr/api/appmgr_rest_api.yaml api/ \
     && rm -rf appmgr
     
-# build and test
-COPY . /go/src/ws
-
 # generate swagger client
 RUN /go/bin/swagger generate client -f api/appmgr_rest_api.yaml -t pkg/ -m appmgrmodel -c appmgrclient
-# build the o1agent
-RUN GO111MODULE=on GO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o o1agent cmd/o1agent.go
+# build and test o1agent
+#RUN GO111MODULE=on GO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o o1agent cmd/o1agent.go
 
-COPY . /go/src/ws
+RUN ./build_o1agent.sh
 
 # make the data model based on the ric yang model
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-xapp-desc-v1.yang
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-ueec-config-v1.yang
+RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-gnb-status-v1.yang
 
 CMD ["/bin/bash"]
 
@@ -192,19 +191,19 @@ RUN mkdir -p ${CONFIGDIR}
 COPY config/supervisord.conf ${CONFIGDIR}/supervisord.conf
     
 # libraries and binaries & config
-COPY --from=o2mediator-build /usr/local/share/ /usr/local/share/
-COPY --from=o2mediator-build /usr/local/etc/ /usr/local/etc/
-COPY --from=o2mediator-build /usr/local/bin/ /usr/local/bin/
-COPY --from=o2mediator-build /usr/local/lib/ /usr/local/lib/
+COPY --from=o1mediator-build /usr/local/share/ /usr/local/share/
+COPY --from=o1mediator-build /usr/local/etc/ /usr/local/etc/
+COPY --from=o1mediator-build /usr/local/bin/ /usr/local/bin/
+COPY --from=o1mediator-build /usr/local/lib/ /usr/local/lib/
 RUN ldconfig
 
 # copy yang models with data
-COPY --from=o2mediator-build /etc/sysrepo /etc/sysrepo
+COPY --from=o1mediator-build /etc/sysrepo /etc/sysrepo
 
-COPY --from=o2mediator-build /go/src/ws/agent/o1agent /usr/local/bin
-COPY --from=o2mediator-build /go/src/ws/manager/src/process-state.py /usr/local/bin
+COPY --from=o1mediator-build /go/src/ws/agent/o1agent /usr/local/bin
+COPY --from=o1mediator-build /go/src/ws/manager/src/process-state.py /usr/local/bin
 RUN mkdir -p /etc/o1agent
-COPY --from=o2mediator-build /go/src/ws/agent/config/* /etc/o1agent/
+COPY --from=o1mediator-build /go/src/ws/agent/config/* /etc/o1agent/
 
 # ports available outside 8080 for mediator and 9001 supervise http control interrface
 # port 830 for netconf client ssh session

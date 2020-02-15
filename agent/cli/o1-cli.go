@@ -1,17 +1,18 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"flag"
-	"fmt"
-	"github.com/Juniper/go-netconf/netconf"
-	xj "github.com/basgys/goxml2json"
-	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"log"
 	"strings"
 	"time"
+	"os"
+	"bytes"
+	"flag"
+	"fmt"
+	"encoding/json"
+	"io/ioutil"
+	"github.com/Juniper/go-netconf/netconf"
+	xj "github.com/basgys/goxml2json"
+	"golang.org/x/crypto/ssh"
 )
 
 var (
@@ -25,11 +26,19 @@ var (
 	action   = flag.String("action", "get", "Netconf command: get or edit")
 	timeout  = flag.Int("timeout", 30, "Timeout")
 
+	getStateXml   = "<get><filter type=\"subtree\"><ric xmlns=\"urn:o-ran:ric:gnb-status:1.0\"></ric></filter></get>"
 	getConfigXml  = "<get-config><source><%s/></source><filter type=\"subtree\"><%s/></filter></get-config>"
 	editConfigXml = "<edit-config><target><%s/></target><config>%s</config></edit-config>"
 )
 
 func main() {
+	defer func() { // catch or finally
+        if err := recover(); err != nil { //catch
+            fmt.Fprintf(os.Stderr, "Something went wrong: %v\n", err)
+            os.Exit(1)
+        }
+	}()
+
 	if flag.Parse(); flag.Parsed() == false {
 		log.Fatal("Syntax error!")
 		return
@@ -37,20 +46,22 @@ func main() {
 
 	switch *action {
 	case "get":
-		getConfig()
+		getConfig(getStateXml)
+	case "get-config":
+		getConfig(getConfigXml)
 	case "edit":
 		editConfig()
 	}
 }
 
-func getConfig() {
+func getConfig(cmdXml string) {
 	session := startSSHSession()
 	if session == nil {
 		return
 	}
 	defer session.Close()
 
-	cmd := netconf.RawMethod(fmt.Sprintf(getConfigXml, *source, *subtree))
+	cmd := netconf.RawMethod(fmt.Sprintf(cmdXml, *source, *subtree))
 	reply, err := session.Exec(cmd)
 	if err != nil {
 		log.Fatal(err)

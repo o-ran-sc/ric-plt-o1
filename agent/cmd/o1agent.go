@@ -21,19 +21,23 @@ package main
 
 import (
 	"os"
-    "os/signal"
-    "syscall"
+	"os/signal"
+	"syscall"
+	"fmt"
 
-	"github.com/spf13/viper"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
-	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/nbi"
+	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
+	"github.com/spf13/viper"
 )
 
+var Version string
+var Hash string
+
 type O1Agent struct {
-	rmrReady 	bool
-	nbiClient 	*nbi.Nbi
-	sigChan 	chan os.Signal
+	rmrReady  bool
+	nbiClient *nbi.Nbi
+	sigChan   chan os.Signal
 }
 
 func (o O1Agent) Consume(rp *xapp.RMRParams) (err error) {
@@ -53,7 +57,7 @@ func (o *O1Agent) StatusCB() bool {
 }
 
 func (o *O1Agent) Run() {
-	xapp.Logger.SetMdc("o1agent", "0.3.1")
+	xapp.Logger.SetMdc("o1agent", fmt.Sprintf("%s:%s", Version, Hash))
 	xapp.SetReadyCB(func(d interface{}) { o.rmrReady = true }, true)
 	xapp.AddConfigChangeListener(o.ConfigChangeHandler)
 	xapp.Resource.InjectStatusCb(o.StatusCB)
@@ -67,7 +71,7 @@ func (o *O1Agent) Run() {
 func (o *O1Agent) Sighandler() {
 	xapp.Logger.Info("Signal handler installed!")
 
-	<- o.sigChan
+	<-o.sigChan
 	o.nbiClient.Stop()
 	os.Exit(1)
 }
@@ -81,9 +85,9 @@ func NewO1Agent() *O1Agent {
 	sbiClient := sbi.NewSBIClient(host, baseUrl, []string{prot}, timeout)
 
 	return &O1Agent{
-		rmrReady: false,
+		rmrReady:  false,
 		nbiClient: nbi.NewNbi(sbiClient),
-		sigChan: make(chan os.Signal, 1),
+		sigChan:   make(chan os.Signal, 1),
 	}
 }
 
@@ -94,6 +98,6 @@ func main() {
 		xapp.Logger.Error("NBI initialization failed!")
 		return
 	}
-	
+
 	o1Agent.Run()
 }

@@ -20,10 +20,10 @@
 package sbi
 
 import (
-	"time"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	apiclient "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrclient"
 	apixapp "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrclient/xapp"
@@ -93,13 +93,13 @@ func (s *SBIClient) GetDeployedXapps() error {
 
 func (s *SBIClient) BuildXappConfig(name, namespace string, configData interface{}) *apimodel.XAppConfig {
 	metadata := &apimodel.ConfigMetadata{
-		XappName:    &name,
+		XappName:  &name,
 		Namespace: &namespace,
 	}
 
 	return &apimodel.XAppConfig{
 		Metadata: metadata,
-		Config: configData,
+		Config:   configData,
 	}
 }
 

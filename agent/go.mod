@@ -2,7 +2,7 @@ module gerrit.oran-osc.org/r/ric-plt/o1mediator
 
 go 1.12
 
-replace gerrit.o-ran-sc.org/r/ric-plt/xapp-frame => gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.0.21
+replace gerrit.o-ran-sc.org/r/ric-plt/xapp-frame => gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.0.26
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.0
 
@@ -12,15 +12,16 @@ require (
 	gerrit.o-ran-sc.org/r/com/golog v0.0.1
 	gerrit.o-ran-sc.org/r/ric-plt/xapp-frame v0.0.0-00010101000000-000000000000
 	github.com/Juniper/go-netconf v0.1.1 // indirect
+	github.com/basgys/goxml2json v1.1.0 // indirect
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/go-openapi/errors v0.19.2
+	github.com/go-openapi/errors v0.19.3
 	github.com/go-openapi/loads v0.19.4
 	github.com/go-openapi/runtime v0.19.7
 	github.com/go-openapi/spec v0.19.4
-	github.com/go-openapi/strfmt v0.19.3
-	github.com/go-openapi/swag v0.19.5
-	github.com/go-openapi/validate v0.19.4
+	github.com/go-openapi/strfmt v0.19.4
+	github.com/go-openapi/swag v0.19.7
+	github.com/go-openapi/validate v0.19.6
 	github.com/gorilla/mux v1.7.1
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/orcaman/concurrent-map v0.0.0-20190314100340-2693aad1ed75
