@@ -156,6 +156,31 @@ func TestErrorCases(t *testing.T) {
 	assert.Equal(t, true, err != nil)
 }
 
+func TestConnStatus2Str(t *testing.T) {
+	assert.Equal(t, n.ConnStatus2Str(0), "not-specified")
+	assert.Equal(t, n.ConnStatus2Str(1), "connected")
+	assert.Equal(t, n.ConnStatus2Str(2), "disconnected")
+	assert.Equal(t, n.ConnStatus2Str(3), "setup-failed")
+	assert.Equal(t, n.ConnStatus2Str(4), "connecting")
+	assert.Equal(t, n.ConnStatus2Str(5), "shutting-down")
+	assert.Equal(t, n.ConnStatus2Str(6), "shutdown")
+	assert.Equal(t, n.ConnStatus2Str(1234), "not-specified")
+}
+
+func TestE2APProt2Str(t *testing.T) {
+	assert.Equal(t, n.E2APProt2Str(0), "not-specified")
+	assert.Equal(t, n.E2APProt2Str(1), "x2-setup-request")
+	assert.Equal(t, n.E2APProt2Str(2), "endc-x2-setup-request")
+	assert.Equal(t, n.E2APProt2Str(1111), "not-specified")
+}
+
+func TestNodeType2Str(t *testing.T) {
+	assert.Equal(t, n.NodeType2Str(0), "not-specified")
+	assert.Equal(t, n.NodeType2Str(1), "enb")
+	assert.Equal(t, n.NodeType2Str(2), "gnb")
+	assert.Equal(t, n.NodeType2Str(1111), "not-specified")
+}
+
 func TestTeardown(t *testing.T) {
 	n.Stop()
 }

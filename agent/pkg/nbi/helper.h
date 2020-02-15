@@ -30,4 +30,8 @@ char * yang_data_sr2json(sr_session_ctx_t *session, const char *module_name, sr_
 
 char * get_data_json(sr_session_ctx_t *session, const char *module_name);
 
+int gnb_status_cb(sr_session_ctx_t *session, const char *module_name, const char *xpath, const char *req_xpath, uint32_t req_id, struct lyd_node **parent, void *private_data);
+
+void create_new_path(sr_session_ctx_t *session, char **parent, char *key, char *value);
+
 #endif

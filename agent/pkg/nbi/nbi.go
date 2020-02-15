@@ -19,15 +19,15 @@
 
 package nbi
 
-import (	
-	"time"
+import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
-	"unsafe"
-	"encoding/json"
 	"github.com/spf13/viper"
 	"github.com/valyala/fastjson"
+	"strings"
+	"time"
+	"unsafe"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
@@ -52,7 +52,7 @@ func NewNbi(s sbi.SBIClientInterface) *Nbi {
 	sbiClient = s
 
 	nbiClient = &Nbi{
-		schemas:  viper.GetStringSlice("nbi.schemas"),
+		schemas:     viper.GetStringSlice("nbi.schemas"),
 		cleanupChan: make(chan bool),
 	}
 	return nbiClient
@@ -68,7 +68,7 @@ func (n *Nbi) Start() bool {
 	return true
 }
 
-func (n *Nbi) Stop() {	
+func (n *Nbi) Stop() {
 	C.sr_unsubscribe(n.subscription)
 	C.sr_session_stop(n.session)
 	C.sr_disconnect(n.connection)
@@ -108,13 +108,27 @@ func (n *Nbi) DoSubscription(schemas []string) bool {
 			return false
 		}
 	}
-	return true
+	return n.SubscribeStatusData()
 }
 
 func (n *Nbi) SubscribeModule(module *C.char) bool {
 	rc := C.sr_module_change_subscribe(n.session, module, nil, C.sr_module_change_cb(C.module_change_cb), nil, 0, 0, &n.subscription)
 	if C.SR_ERR_OK != rc {
 		log.Info("NBI: sr_module_change_subscribe failed: %s", C.GoString(C.sr_strerror(rc)))
+		return false
+	}
+	return true
+}
+
+func (n *Nbi) SubscribeStatusData() bool {
+	mod := C.CString("o-ran-sc-ric-gnb-status-v1")
+	path := C.CString("/o-ran-sc-ric-gnb-status-v1:ric/nodes")
+	defer C.free(unsafe.Pointer(mod))
+	defer C.free(unsafe.Pointer(path))
+
+	rc := C.sr_oper_get_items_subscribe(n.session, mod, path, C.sr_oper_get_items_cb(C.gnb_status_cb), nil, 0, &n.subscription)
+	if C.SR_ERR_OK != rc {
+		log.Error("NBI: sr_oper_get_items_subscribe failed: %s", C.GoString(C.sr_strerror(rc)))
 		return false
 	}
 	return true
@@ -167,12 +181,12 @@ func (n *Nbi) ManageXapps(module, configJson string, oper int) error {
 
 		desc := sbiClient.BuildXappDescriptor(xappName, namespace, relName, version)
 		switch oper {
-			case C.SR_OP_CREATED:
-				return sbiClient.DeployXapp(desc)
-			case C.SR_OP_DELETED:
-				return sbiClient.UndeployXapp(desc)
-			default:
-				return errors.New(fmt.Sprintf("Operation '%d' not supported!", oper))
+		case C.SR_OP_CREATED:
+			return sbiClient.DeployXapp(desc)
+		case C.SR_OP_DELETED:
+			return sbiClient.UndeployXapp(desc)
+		default:
+			return errors.New(fmt.Sprintf("Operation '%d' not supported!", oper))
 		}
 	}
 	return nil
@@ -180,7 +194,7 @@ func (n *Nbi) ManageXapps(module, configJson string, oper int) error {
 
 func (n *Nbi) ManageConfigmaps(module, configJson string, oper int) error {
 	log.Info("ManageConfig: module=%s configJson=%s", module, configJson)
-	
+
 	if configJson == "" || module != "o-ran-sc-ric-ueec-config-v1" {
 		return nil
 	}
@@ -225,4 +239,96 @@ func (n *Nbi) ParseJsonArray(dsContent, model, top, elem string) ([]*fastjson.Va
 		return nil, err
 	}
 	return v.GetArray(model, top, elem), nil
+}
+
+//export nbiGnbStateCB
+func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, req_xpath *C.char, reqid C.uint32_t, parent **C.char) C.int {
+	log.Info("NBI: Module state data for module='%s' path='%s' rpath='%s' requested [id=%d]", C.GoString(module), C.GoString(xpath), C.GoString(req_xpath), reqid)
+
+	gnbs, err := xapp.Rnib.GetListGnbIds()
+	if err != nil || len(gnbs) == 0 {
+		log.Info("Rnib.GetListGnbIds() returned elementCount=%d err:%v", len(gnbs), err)
+		return C.SR_ERR_OK
+	}
+
+	for _, gnb := range gnbs {
+		ranName := gnb.GetInventoryName()
+		info, err := xapp.Rnib.GetNodeb(ranName)
+		if err != nil {
+			log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
+			continue
+		}
+
+		prot := nbiClient.E2APProt2Str(int(info.E2ApplicationProtocol))
+		connStat := nbiClient.ConnStatus2Str(int(info.ConnectionStatus))
+		ntype := nbiClient.NodeType2Str(int(info.NodeType))
+
+		log.Info("gNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, gnb.GetGlobalNbId().GetPlmnId(), gnb.GetGlobalNbId().GetNbId())
+
+		nbiClient.CreateNewElement(session, parent, ranName, "ran-name", ranName)
+		nbiClient.CreateNewElement(session, parent, ranName, "ip", info.Ip)
+		nbiClient.CreateNewElement(session, parent, ranName, "port", fmt.Sprintf("%d", info.Port))
+		nbiClient.CreateNewElement(session, parent, ranName, "plmn-id", gnb.GetGlobalNbId().GetPlmnId())
+		nbiClient.CreateNewElement(session, parent, ranName, "nb-id", gnb.GetGlobalNbId().GetNbId())
+		nbiClient.CreateNewElement(session, parent, ranName, "e2ap-protocol", prot)
+		nbiClient.CreateNewElement(session, parent, ranName, "connection-status", connStat)
+		nbiClient.CreateNewElement(session, parent, ranName, "node", ntype)
+	}
+	return C.SR_ERR_OK
+}
+
+func (n *Nbi) CreateNewElement(session *C.sr_session_ctx_t, parent **C.char, key, name, value string) {
+	basePath := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']/%s", key, name)
+	log.Info("%s -> %s", basePath, value)
+
+	cPath := C.CString(basePath)
+	defer C.free(unsafe.Pointer(cPath))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+
+	C.create_new_path(session, parent, cPath, cValue)
+}
+
+func (n *Nbi) ConnStatus2Str(connStatus int) string {
+	switch connStatus {
+	case 0:
+		return "not-specified"
+	case 1:
+		return "connected"
+	case 2:
+		return "disconnected"
+	case 3:
+		return "setup-failed"
+	case 4:
+		return "connecting"
+	case 5:
+		return "shutting-down"
+	case 6:
+		return "shutdown"
+	}
+	return "not-specified"
+}
+
+func (n *Nbi) E2APProt2Str(prot int) string {
+	switch prot {
+	case 0:
+		return "not-specified"
+	case 1:
+		return "x2-setup-request"
+	case 2:
+		return "endc-x2-setup-request"
+	}
+	return "not-specified"
+}
+
+func (n *Nbi) NodeType2Str(ntype int) string {
+	switch ntype {
+	case 0:
+		return "not-specified"
+	case 1:
+		return "enb"
+	case 2:
+		return "gnb"
+	}
+	return "not-specified"
 }
