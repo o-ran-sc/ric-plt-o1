@@ -30,34 +30,56 @@ module o-ran-sc-ric-ueec-config-v1 {
         reference
             "O-RAN-OAM-Interface-Specification (O1)";
     }
-    
+
     grouping subscription {
         leaf active {
             type boolean;
+            description
+                "Subscription status: active or deactive";
         }
         container interfaceId {
             container globalENBId {
                 leaf plmnId {
                     type string;
+                    description
+                        "PLMN ID";
                 }
                 leaf eNBId {
                     type uint64;
+                    description
+                        "eNB ID";
                 }
+                description
+                    "Global ID";
             }
+            description
+                "gNB interface ID";
         }
+        description
+            "Subscription related parameters";
     }
 
     container ric {
         container config {
             leaf name {
                 type string;
+                description
+                    "The name of xApp";
             }
             leaf namespace {
                 type string;
+                description
+                    "The namespace";
             }
             container control {
                 uses subscription;
+                description
+                    "The control object";
             }
+            description
+                "The container for configuration data";
         }
+        description
+            "Root object for gNB status";
     }
 }

@@ -30,7 +30,7 @@ module o-ran-sc-ric-gnb-status-v1 {
         reference
             "O-RAN-OAM-Interface-Specification (O1)";
     }
-    
+
     typedef e2ap-protocol-type {
         type enumeration {
             enum not-specified {
@@ -145,8 +145,10 @@ module o-ran-sc-ric-gnb-status-v1 {
             description
                 "The type of the node: eNB or gNB";
         }
+        description
+            "Node information";
     }
-    
+
     container ric {
         container nodes {
             config false;
@@ -159,5 +161,7 @@ module o-ran-sc-ric-gnb-status-v1 {
             description
                 "State data container of the nodes";
         }
+        description
+            "Root object for gNB status";
     }
 }

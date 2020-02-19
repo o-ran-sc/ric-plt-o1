@@ -34,8 +34,8 @@ module o-ran-sc-ric-xapp-desc-v1 {
     // LCM: Generic xApp descriptor passed to xApp Manager (or OCO) during xApp deployment/undeployment
     grouping xapp-descriptor {
         leaf name {
-            mandatory true;
             type string;
+            mandatory true;
             description
                 "Name of the xApp in helm chart";
         }
@@ -59,6 +59,8 @@ module o-ran-sc-ric-xapp-desc-v1 {
             description
                 "JSON string of override file for 'helm install' command";
         }
+        description
+            "xApp descriptor";
     }
 
     grouping xapp-status {
@@ -72,24 +74,34 @@ module o-ran-sc-ric-xapp-desc-v1 {
             description
                 "The status of xApp: true=healthy false=not-healthy";
         }
+        description
+            "xApp health status";
     }
-    
+
     // Top-level (root) managed object
     container ric {
         container xapps {
             list xapp {
                 key "name";
                 uses xapp-descriptor;
+                description
+                    "xApp descriptor";
             }
+            description
+                "List of xApps to be managed";
         }
         container health {
             config false;
             list status {
                 key "name";
                 uses xapp-status;
+                description
+                    "The status of xApp";
             }
             description
                 "State data of the xApps";
         }
+        description
+            "Root object for xApp management and status";
     }
 }
