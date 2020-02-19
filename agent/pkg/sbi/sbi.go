@@ -20,8 +20,13 @@
 package sbi
 
 import (
+	"bytes"
+	"fmt"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"os/exec"
+	"regexp"
+	"strings"
 	"time"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
@@ -29,6 +34,12 @@ import (
 	apixapp "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrclient/xapp"
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
 )
+
+type PodStatus struct {
+	Name   string
+	Health string
+	Status string
+}
 
 var log = xapp.Logger
 
@@ -112,4 +123,61 @@ func (s *SBIClient) ModifyXappConfig(xappConfig *apimodel.XAppConfig) error {
 		log.Info("SBI: ModifyXappConfig successful: payload=%v", result.Payload)
 	}
 	return err
+}
+
+func (s *SBIClient) GetAllPodStatus(namespace string) ([]PodStatus, error) {
+	output, err := s.RunCommand(fmt.Sprintf("kubectl get pod -n %s", namespace))
+	if err != nil {
+		return []PodStatus{}, err		
+	}
+
+	podStatusList := []PodStatus{}
+	var readyStr string
+	re := regexp.MustCompile(`deployment-.*`)
+	podList := re.FindAllStringSubmatch(string(output), -1)
+	if podList != nil {
+		for _, pod := range podList {
+			p := PodStatus{}
+			fmt.Sscanf(pod[0], "%s %s %s", &p.Name, &readyStr, &p.Status)
+			p.Name = strings.Split(p.Name, "-")[2]
+			p.Health = s.GetHealthState(readyStr)
+
+			podStatusList = append(podStatusList, p)
+		}
+	}
+	return podStatusList, nil
+}
+
+func (s *SBIClient) GetHealthState(ready string) (state string) {
+	result := strings.Split(ready, "/")
+	if len(result) < 2 {
+		return "unavailable"
+	}
+
+	if result[0] == result[1] {
+		state = "healthy"
+	} else {
+		state = "unhealthy"
+	}
+	return
+}
+
+func (s *SBIClient) RunCommand(args string) (string, error) {
+	return CommandExec(args)
+}
+
+var CommandExec = func(args string) (string, error) {
+	cmd := exec.Command("/bin/sh", "-c", args)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	xapp.Logger.Debug("Running command: '%s'", cmd)
+	if err := cmd.Run(); err != nil {
+		xapp.Logger.Error("Command failed (%s): %v - %s", cmd, err.Error(), stderr.String())
+		return "", err
+	}
+	xapp.Logger.Debug("Command executed successfully!")
+	return stdout.String(), nil
 }

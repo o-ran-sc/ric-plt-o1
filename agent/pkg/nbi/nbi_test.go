@@ -67,6 +67,19 @@ var XappDescriptor = `{
 	}
   }`
 
+var kpodOutput = `
+NAME                                            READY   STATUS    RESTARTS   AGE
+deployment-ricplt-a1mediator-7bfdd587db-2jl9j   1/1     Running   53         29d
+deployment-ricplt-appmgr-6748846478-8hmtz       1-1     Running   1          29d
+deployment-ricplt-dbaas-7f76f65c99-5p6c6        0/1     Running   1          29d
+deployment-ricplt-e2mgr-6567bf49c7-lljl5        1/1     Running   2          29d
+deployment-ricplt-e2term-76f95c8d49-6pxlm       1/1     Running   3          29d
+deployment-ricplt-rtmgr-75b4886445-jsbx9        0/1     Running   1          29d
+deployment-ricplt-submgr-b6b4f6c46-fclkp        1/1     Running   3          29d
+deployment-ricplt-vespamgr-58f8f5659-pwbhr      1/1     Running   1          29d
+o1mediator-6c7df787fb-ztb7g                     0/1     Running   0          2d
+`
+
 var n *Nbi
 
 // Test cases
@@ -120,6 +133,28 @@ func TestGetDeployedXapps(t *testing.T) {
 
 	err := sbiClient.GetDeployedXapps()
 	assert.Equal(t, true, err == nil)
+}
+
+func TestGetAllPodStatus(t *testing.T) {
+	sbi.CommandExec = func(args string) (out string, err error) {
+		assert.Equal(t, "kubectl get pod -n namespace", args)
+		return kpodOutput, nil
+	}
+
+	expectedPodList := []sbi.PodStatus{
+		sbi.PodStatus{Name:"a1mediator", Health: "healthy", Status:"Running"},
+		sbi.PodStatus{Name:"appmgr", Health: "unavailable", Status:"Running"},
+		sbi.PodStatus{Name:"dbaas", Health: "unhealthy", Status:"Running"},
+		sbi.PodStatus{Name:"e2mgr", Health: "healthy", Status:"Running"},
+		sbi.PodStatus{Name:"e2term", Health: "healthy", Status:"Running"},
+		sbi.PodStatus{Name:"rtmgr", Health: "unhealthy", Status:"Running"},
+		sbi.PodStatus{Name:"submgr", Health: "healthy", Status:"Running"},
+		sbi.PodStatus{Name:"vespamgr", Health: "healthy", Status:"Running"},
+	}
+
+	podList, err := sbiClient.GetAllPodStatus("namespace")
+	assert.Equal(t, true, err == nil)
+	assert.Equal(t, podList, expectedPodList)
 }
 
 func TestErrorCases(t *testing.T) {

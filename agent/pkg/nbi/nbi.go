@@ -258,7 +258,13 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	log.Info("NBI: Module state data for module='%s' path='%s' rpath='%s' requested [id=%d]", C.GoString(module), C.GoString(xpath), C.GoString(req_xpath), reqid)
 
 	if C.GoString(module) == "o-ran-sc-ric-xapp-desc-v1" {
-		log.Info("xApp health query not implemtented yet!")
+		podList, _ := sbiClient.GetAllPodStatus("namespace")
+		for _, pod := range podList {
+			path := fmt.Sprintf("/o-ran-sc-ric-xapp-desc-v1:ric/health/status[name='%s']", pod.Name)
+			nbiClient.CreateNewElement(session, parent, path, "name", path)
+			nbiClient.CreateNewElement(session, parent, path, "health", pod.Health)
+			nbiClient.CreateNewElement(session, parent, path, "status", pod.Status)
+		}
 		return C.SR_ERR_OK
 	}
 
@@ -282,20 +288,21 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 
 		log.Info("gNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, gnb.GetGlobalNbId().GetPlmnId(), gnb.GetGlobalNbId().GetNbId())
 
-		nbiClient.CreateNewElement(session, parent, ranName, "ran-name", ranName)
-		nbiClient.CreateNewElement(session, parent, ranName, "ip", info.Ip)
-		nbiClient.CreateNewElement(session, parent, ranName, "port", fmt.Sprintf("%d", info.Port))
-		nbiClient.CreateNewElement(session, parent, ranName, "plmn-id", gnb.GetGlobalNbId().GetPlmnId())
-		nbiClient.CreateNewElement(session, parent, ranName, "nb-id", gnb.GetGlobalNbId().GetNbId())
-		nbiClient.CreateNewElement(session, parent, ranName, "e2ap-protocol", prot)
-		nbiClient.CreateNewElement(session, parent, ranName, "connection-status", connStat)
-		nbiClient.CreateNewElement(session, parent, ranName, "node", ntype)
+		path := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']", ranName)
+		nbiClient.CreateNewElement(session, parent, path, "ran-name", ranName)
+		nbiClient.CreateNewElement(session, parent, path, "ip", info.Ip)
+		nbiClient.CreateNewElement(session, parent, path, "port", fmt.Sprintf("%d", info.Port))
+		nbiClient.CreateNewElement(session, parent, path, "plmn-id", gnb.GetGlobalNbId().GetPlmnId())
+		nbiClient.CreateNewElement(session, parent, path, "nb-id", gnb.GetGlobalNbId().GetNbId())
+		nbiClient.CreateNewElement(session, parent, path, "e2ap-protocol", prot)
+		nbiClient.CreateNewElement(session, parent, path, "connection-status", connStat)
+		nbiClient.CreateNewElement(session, parent, path, "node", ntype)
 	}
 	return C.SR_ERR_OK
 }
 
 func (n *Nbi) CreateNewElement(session *C.sr_session_ctx_t, parent **C.char, key, name, value string) {
-	basePath := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']/%s", key, name)
+	basePath := fmt.Sprintf("%s/%s", key, name)
 	log.Info("%s -> %s", basePath, value)
 
 	cPath := C.CString(basePath)

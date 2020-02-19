@@ -1,31 +1,31 @@
 package main
 
 import (
-	"log"
-	"strings"
-	"time"
-	"os"
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"encoding/json"
-	"io/ioutil"
 	"github.com/Juniper/go-netconf/netconf"
 	xj "github.com/basgys/goxml2json"
 	"golang.org/x/crypto/ssh"
+	"io/ioutil"
+	"log"
+	"os"
+	"strings"
+	"time"
 )
 
 var (
-	host     = flag.String("host", "localhost", "Hostname")
-	username = flag.String("username", "netconf", "Username")
-	passwd   = flag.String("password", "netconf", "Password")
-	source   = flag.String("source", "running", "Source datastore")
-	target   = flag.String("target", "running", "Target datastore")
-	subtree  = flag.String("subtree", "netconf-server", "Subtree or module to select")
+	host      = flag.String("host", "localhost", "Hostname")
+	username  = flag.String("username", "netconf", "Username")
+	passwd    = flag.String("password", "netconf", "Password")
+	source    = flag.String("source", "running", "Source datastore")
+	target    = flag.String("target", "running", "Target datastore")
+	subtree   = flag.String("subtree", "netconf-server", "Subtree or module to select")
 	namespace = flag.String("namespace", "urn:o-ran:ric:gnb-status:1.0", "XML namespace")
-	file     = flag.String("file", "", "Configuration file")
-	action   = flag.String("action", "get", "Netconf command: get or edit")
-	timeout  = flag.Int("timeout", 30, "Timeout")
+	file      = flag.String("file", "", "Configuration file")
+	action    = flag.String("action", "get", "Netconf command: get or edit")
+	timeout   = flag.Int("timeout", 30, "Timeout")
 
 	getStateXml   = "<get><filter type=\"subtree\"><ric xmlns=\"%s\"></ric></filter></get>"
 	getConfigXml  = "<get-config><source><%s/></source><filter type=\"subtree\"><%s/></filter></get-config>"
@@ -34,10 +34,10 @@ var (
 
 func main() {
 	defer func() { // catch or finally
-        if err := recover(); err != nil { //catch
-            fmt.Fprintf(os.Stderr, "Something went wrong: %v\n", err)
-            os.Exit(1)
-        }
+		if err := recover(); err != nil { //catch
+			fmt.Fprintf(os.Stderr, "Something went wrong: %v\n", err)
+			os.Exit(1)
+		}
 	}()
 
 	if flag.Parse(); flag.Parsed() == false {
