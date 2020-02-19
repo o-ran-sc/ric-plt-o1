@@ -20,10 +20,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
-	"fmt"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/nbi"

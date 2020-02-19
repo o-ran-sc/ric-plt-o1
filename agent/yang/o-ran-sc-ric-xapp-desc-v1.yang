@@ -63,16 +63,40 @@ module o-ran-sc-ric-xapp-desc-v1 {
             "xApp descriptor";
     }
 
+    typedef health-status {
+         type enumeration {
+            enum unavailable {
+                description
+                    "The health status not available";
+            }
+            enum healthy {
+                description
+                    "The xApp is healthy";
+            }
+            enum unhealthy {
+                description
+                    "The xApp is not healthy";
+            }
+        }
+        description
+            "xApp health status";
+    }
+
     grouping xapp-status {
         leaf name {
             type string;
             description
-                "Name of the xApp in helm chart";
+                "Name of the xApp visible in Kubernetes";
         }
         leaf status {
-            type boolean;
+            type string;
             description
-                "The status of xApp: true=healthy false=not-healthy";
+                "The status of the xApp pod: running, restarted, etc";
+        }
+        leaf health {
+            type health-status;
+            description
+                "The health status of xApp: healthy, not-healthy, unavailable";
         }
         description
             "xApp health status";
