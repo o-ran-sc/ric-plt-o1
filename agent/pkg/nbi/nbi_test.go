@@ -20,18 +20,17 @@
 package nbi
 
 import (
-	"os"	
-	"time"
 	"encoding/json"
-	"testing"
-	"net"
-    "net/http"
-    "net/http/httptest"
 	"github.com/stretchr/testify/assert"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+	"time"
 
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
-	
 )
 
 var XappConfig = `{
@@ -66,6 +65,13 @@ var XappDescriptor = `{
 	  }
 	}
   }`
+
+var kpodOutput = `
+NAME                               READY   STATUS    RESTARTS   AGE
+ricxapp-ueec-7bfdd587db-2jl9j      1/1     Running   53         29d
+ricxapp-anr-6748846478-8hmtz       1-1     Running   1          29d
+ricxapp-dualco-7f76f65c99-5p6c6    0/1     Running   1          29d
+`
 
 var n *Nbi
 
@@ -122,6 +128,35 @@ func TestGetDeployedXapps(t *testing.T) {
 	assert.Equal(t, true, err == nil)
 }
 
+func TestGetAllPodStatus(t *testing.T) {
+	sbi.CommandExec = func(args string) (out string, err error) {
+		assert.Equal(t, "/usr/local/bin/kubectl get pod -n ricxapp", args)
+		return kpodOutput, nil
+	}
+
+	expectedPodList := []sbi.PodStatus{
+		sbi.PodStatus{
+			Name:   "ueec",
+			Health: "healthy",
+			Status: "Running",
+		},
+		sbi.PodStatus{
+			Name:   "anr",
+			Health: "unavailable",
+			Status: "Running",
+		},
+		sbi.PodStatus{
+			Name:   "dualco",
+			Health: "unhealthy",
+			Status: "Running",
+		},
+	}
+
+	podList, err := sbiClient.GetAllPodStatus("ricxapp")
+	assert.Equal(t, true, err == nil)
+	assert.Equal(t, podList, expectedPodList)
+}
+
 func TestErrorCases(t *testing.T) {
 	// Invalid config
 	err := n.ManageXapps("o-ran-sc-ric-xapp-desc-v1", "", 2)
@@ -141,14 +176,6 @@ func TestErrorCases(t *testing.T) {
 
 	// Invalid config
 	err = n.ManageConfigmaps("o-ran-sc-ric-ueec-config-v1", "", 1)
-	assert.Equal(t, true, err == nil)
-
-	// Invalid module
-	err = n.ManageConfigmaps("", "{}", 1)
-	assert.Equal(t, true, err == nil)
-
-	// Unexpected module
-	err = n.ManageConfigmaps("o-ran-sc-ric-xapp-desc-v1", "{}", 0)
 	assert.Equal(t, true, err == nil)
 
 	// Invalid operation
@@ -188,7 +215,7 @@ func TestTeardown(t *testing.T) {
 func CreateHTTPServer(t *testing.T, method, url string, status int, respData interface{}) *httptest.Server {
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
-			t.Error("Failed to create listener: " + err.Error())
+		t.Error("Failed to create listener: " + err.Error())
 	}
 	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.Method, method)
@@ -216,7 +243,7 @@ func DescMatcher(result, expected *apimodel.XappDescriptor) bool {
 
 func ConfigMatcher(result, expected *apimodel.XAppConfig) bool {
 	if *result.Metadata.XappName == *expected.Metadata.XappName &&
-	   *result.Metadata.Namespace == *expected.Metadata.Namespace {
+		*result.Metadata.Namespace == *expected.Metadata.Namespace {
 		return true
 	}
 	return false
