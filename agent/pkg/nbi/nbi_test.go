@@ -67,6 +67,13 @@ var XappDescriptor = `{
 	}
   }`
 
+var kpodOutput = `
+NAME                               READY   STATUS    RESTARTS   AGE
+ricxapp-ueec-7bfdd587db-2jl9j      1/1     Running   53         29d
+ricxapp-anr-6748846478-8hmtz       1-1     Running   1          29d
+ricxapp-dualco-7f76f65c99-5p6c6    0/1     Running   1          29d
+`
+
 var n *Nbi
 
 // Test cases
@@ -120,6 +127,35 @@ func TestGetDeployedXapps(t *testing.T) {
 
 	err := sbiClient.GetDeployedXapps()
 	assert.Equal(t, true, err == nil)
+}
+
+func TestGetAllPodStatus(t *testing.T) {
+	sbi.CommandExec = func(args string) (out string, err error) {
+		assert.Equal(t, "/usr/bin/kubectl get pod -n ricxapp", args)
+		return kpodOutput, nil
+	}
+
+	expectedPodList := []sbi.PodStatus{
+		sbi.PodStatus{
+			Name:"ueec",
+			Health: "healthy",
+			Status:"Running",
+		},
+		sbi.PodStatus{
+			Name:"anr",
+			Health: "unavailable",
+			Status:"Running",
+		},
+		sbi.PodStatus{
+			Name:"dualco",
+			Health: "unhealthy",
+			Status:"Running",
+		},
+	}
+
+	podList, err := sbiClient.GetAllPodStatus("ricxapp")
+	assert.Equal(t, true, err == nil)
+	assert.Equal(t, podList, expectedPodList)
 }
 
 func TestErrorCases(t *testing.T) {
