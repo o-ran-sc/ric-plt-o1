@@ -69,7 +69,8 @@ RUN \
 RUN \
       cd /opt/dev && \
       git clone https://github.com/sysrepo/sysrepo.git && \
-      cd sysrepo && mkdir build && cd build && \
+      cd sysrepo && && sed -i -e 's/2000/30000/g' src/common.h.in && \
+      mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/etc/sysrepo .. && \
       make -j2 && \
       make install && make sr_clean && \

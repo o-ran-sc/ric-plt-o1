@@ -40,4 +40,6 @@ type SBIClientInterface interface {
 
 	BuildXappConfig(name, namespace string, configData interface{}) *apimodel.XAppConfig
 	ModifyXappConfig(xappConfig *apimodel.XAppConfig) error
+
+	GetAllPodStatus(namespace string) ([]PodStatus, error)
 }
