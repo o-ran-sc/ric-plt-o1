@@ -133,12 +133,11 @@ RUN mkdir -p api \
     
 # generate swagger client
 RUN /go/bin/swagger generate client -f api/appmgr_rest_api.yaml -t pkg/ -m appmgrmodel -c appmgrclient
-# build and test o1agent
-#RUN GO111MODULE=on GO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o o1agent cmd/o1agent.go
 
+# build and test o1agent
 RUN ./build_o1agent.sh
 
-# make the data model based on the ric yang model
+# Install the data models based on the ric yang model
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-xapp-desc-v1.yang
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-ueec-config-v1.yang
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-gnb-status-v1.yang

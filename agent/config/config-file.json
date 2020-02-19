@@ -6,8 +6,6 @@
         "level": 4
     },
     "db": {
-        "host": "localhost",
-        "port": 6379,
         "namespaces": ["sdl", "rnib"]
     },
     "rmr": {
@@ -22,14 +20,7 @@
         "timeout": 30
     },
     "nbi": {
-        "schemas": ["o-ran-sc-ric-xapp-desc-v1", "o-ran-sc-ric-ueec-config-v1"],
-        "modulePath": "/opt/ric/yang/",
-        "moduleFile": "ric-model.yang",
-        "xpaths": {
-            "xapp": "/ric-model:ric/xapps//*",
-            "config": "/ric-model:ric/config//*",
-            "data":"/ric-model:ric/xapps/status"
-        }
+        "schemas": ["o-ran-sc-ric-xapp-desc-v1", "o-ran-sc-ric-ueec-config-v1"]
     },
     "controls": {
         "active": true

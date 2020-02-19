@@ -100,6 +100,7 @@ func (n *Nbi) Setup(schemas []string) bool {
 
 func (n *Nbi) DoSubscription(schemas []string) bool {
 	log.Info("Subscribing YANG modules ... %v", schemas)
+
 	for _, module := range schemas {
 		modName := C.CString(module)
 		defer C.free(unsafe.Pointer(modName))
@@ -121,8 +122,19 @@ func (n *Nbi) SubscribeModule(module *C.char) bool {
 }
 
 func (n *Nbi) SubscribeStatusData() bool {
-	mod := C.CString("o-ran-sc-ric-gnb-status-v1")
-	path := C.CString("/o-ran-sc-ric-gnb-status-v1:ric/nodes")
+	if ok := n.SubscribeStatus("o-ran-sc-ric-gnb-status-v1", "/o-ran-sc-ric-gnb-status-v1:ric/nodes"); !ok {
+		return ok
+	}
+
+	if ok := n.SubscribeStatus("o-ran-sc-ric-xapp-desc-v1", "/o-ran-sc-ric-xapp-desc-v1:ric/health"); !ok {
+		return ok
+	}
+	return true
+}
+
+func (n *Nbi) SubscribeStatus(module, xpath string) bool {
+	mod := C.CString(module)
+	path := C.CString(xpath)
 	defer C.free(unsafe.Pointer(mod))
 	defer C.free(unsafe.Pointer(path))
 
@@ -244,6 +256,11 @@ func (n *Nbi) ParseJsonArray(dsContent, model, top, elem string) ([]*fastjson.Va
 //export nbiGnbStateCB
 func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, req_xpath *C.char, reqid C.uint32_t, parent **C.char) C.int {
 	log.Info("NBI: Module state data for module='%s' path='%s' rpath='%s' requested [id=%d]", C.GoString(module), C.GoString(xpath), C.GoString(req_xpath), reqid)
+
+	if C.GoString(module) == "o-ran-sc-ric-xapp-desc-v1" {
+		log.Info("xApp health query not implemtented yet!")
+		return C.SR_ERR_OK
+	}
 
 	gnbs, err := xapp.Rnib.GetListGnbIds()
 	if err != nil || len(gnbs) == 0 {

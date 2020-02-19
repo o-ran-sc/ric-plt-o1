@@ -22,11 +22,12 @@ var (
 	source   = flag.String("source", "running", "Source datastore")
 	target   = flag.String("target", "running", "Target datastore")
 	subtree  = flag.String("subtree", "netconf-server", "Subtree or module to select")
+	namespace = flag.String("namespace", "urn:o-ran:ric:gnb-status:1.0", "XML namespace")
 	file     = flag.String("file", "", "Configuration file")
 	action   = flag.String("action", "get", "Netconf command: get or edit")
 	timeout  = flag.Int("timeout", 30, "Timeout")
 
-	getStateXml   = "<get><filter type=\"subtree\"><ric xmlns=\"urn:o-ran:ric:gnb-status:1.0\"></ric></filter></get>"
+	getStateXml   = "<get><filter type=\"subtree\"><ric xmlns=\"%s\"></ric></filter></get>"
 	getConfigXml  = "<get-config><source><%s/></source><filter type=\"subtree\"><%s/></filter></get-config>"
 	editConfigXml = "<edit-config><target><%s/></target><config>%s</config></edit-config>"
 )
@@ -44,23 +45,33 @@ func main() {
 		return
 	}
 
-	switch *action {
-	case "get":
-		getConfig(getStateXml)
-	case "get-config":
-		getConfig(getConfigXml)
-	case "edit":
-		editConfig()
-	}
-}
-
-func getConfig(cmdXml string) {
 	session := startSSHSession()
 	if session == nil {
 		return
 	}
 	defer session.Close()
 
+	switch *action {
+	case "get":
+		getStatus(session, getStateXml)
+	case "get-config":
+		getConfig(session, getConfigXml)
+	case "edit":
+		editConfig(session)
+	}
+}
+
+func getStatus(session *netconf.Session, cmdXml string) {
+	cmd := netconf.RawMethod(fmt.Sprintf(cmdXml, *namespace))
+	reply, err := session.Exec(cmd)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	displayReply(reply.RawReply)
+}
+
+func getConfig(session *netconf.Session, cmdXml string) {
 	cmd := netconf.RawMethod(fmt.Sprintf(cmdXml, *source, *subtree))
 	reply, err := session.Exec(cmd)
 	if err != nil {
@@ -70,17 +81,11 @@ func getConfig(cmdXml string) {
 	displayReply(reply.RawReply)
 }
 
-func editConfig() {
+func editConfig(session *netconf.Session) {
 	if *file == "" {
 		log.Fatal("Configuration file missing!")
 		return
 	}
-
-	session := startSSHSession()
-	if session == nil {
-		return
-	}
-	defer session.Close()
 
 	if data, err := ioutil.ReadFile(*file); err == nil {
 		cmd := netconf.RawMethod(fmt.Sprintf(editConfigXml, *target, data))
