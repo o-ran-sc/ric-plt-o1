@@ -109,6 +109,10 @@ ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/r
 RUN wget --content-disposition ${RMRLIBURL} && dpkg -i rmr_${RMRVERSION}_amd64.deb
 RUN wget --content-disposition ${RMRDEVURL} && dpkg -i rmr-dev_${RMRVERSION}_amd64.deb
 RUN rm -f rmr_${RMRVERSION}_amd64.deb rmr-dev_${RMRVERSION}_amd64.deb
+
+# Install kubectl from Docker Hub
+COPY --from=lachlanevenson/k8s-kubectl:v1.16.0 /usr/local/bin/kubectl /usr/local/bin/kubectl
+
 RUN ldconfig
 
 # Swagger
@@ -195,6 +199,8 @@ COPY --from=o1mediator-build /usr/local/share/ /usr/local/share/
 COPY --from=o1mediator-build /usr/local/etc/ /usr/local/etc/
 COPY --from=o1mediator-build /usr/local/bin/ /usr/local/bin/
 COPY --from=o1mediator-build /usr/local/lib/ /usr/local/lib/
+COPY --from=o1mediator-build /usr/local/bin/kubectl /usr/local/bin/kubectl
+
 RUN ldconfig
 
 # copy yang models with data
