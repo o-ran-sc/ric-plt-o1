@@ -102,7 +102,7 @@ RUN \
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=3.1.0
+ARG RMRVERSION=3.6.3
 ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
 ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
