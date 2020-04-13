@@ -28,7 +28,10 @@ import (
 	"os"
 	"testing"
 	"time"
+	"github.com/go-openapi/strfmt"
+	"fmt"
 
+	"github.com/prometheus/alertmanager/api/v2/models"
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
 )
@@ -77,7 +80,7 @@ var n *Nbi
 
 // Test cases
 func TestMain(M *testing.M) {
-	n = NewNbi(sbi.NewSBIClient("localhost:8080", "/ric/v1/", []string{"http"}, 5))
+	n = NewNbi(sbi.NewSBIClient("localhost:8080", "localhost:9093", 5))
 	go n.Start()
 	time.Sleep(time.Duration(1) * time.Second)
 
@@ -85,7 +88,7 @@ func TestMain(M *testing.M) {
 }
 
 func TestModifyConfigmap(t *testing.T) {
-	ts := CreateHTTPServer(t, "PUT", "/ric/v1/config", http.StatusOK, apimodel.ConfigValidationErrors{})
+	ts := CreateHTTPServer(t, "PUT", "/ric/v1/config", 8080, http.StatusOK, apimodel.ConfigValidationErrors{})
 	defer ts.Close()
 
 	var f interface{}
@@ -97,7 +100,7 @@ func TestModifyConfigmap(t *testing.T) {
 }
 
 func TestDeployXApp(t *testing.T) {
-	ts := CreateHTTPServer(t, "POST", "/ric/v1/xapps", http.StatusCreated, apimodel.Xapp{})
+	ts := CreateHTTPServer(t, "POST", "/ric/v1/xapps", 8080, http.StatusCreated, apimodel.Xapp{})
 	defer ts.Close()
 
 	var f interface{}
@@ -109,7 +112,7 @@ func TestDeployXApp(t *testing.T) {
 }
 
 func TestUnDeployXApp(t *testing.T) {
-	ts := CreateHTTPServer(t, "DELETE", "/ric/v1/xapps/ueec-xapp", http.StatusNoContent, apimodel.Xapp{})
+	ts := CreateHTTPServer(t, "DELETE", "/ric/v1/xapps/ueec-xapp", 8080, http.StatusNoContent, apimodel.Xapp{})
 	defer ts.Close()
 
 	var f interface{}
@@ -121,11 +124,56 @@ func TestUnDeployXApp(t *testing.T) {
 }
 
 func TestGetDeployedXapps(t *testing.T) {
-	ts := CreateHTTPServer(t, "GET", "/ric/v1/xapps", http.StatusOK, apimodel.AllDeployedXapps{})
+	ts := CreateHTTPServer(t, "GET", "/ric/v1/xapps", 8080, http.StatusOK, apimodel.AllDeployedXapps{})
 	defer ts.Close()
 
 	err := sbiClient.GetDeployedXapps()
 	assert.Equal(t, true, err == nil)
+}
+
+func TestGetAlerts(t *testing.T) {
+	tim := strfmt.DateTime(time.Now())
+	fingerprint := "34c8f717936f063f"
+
+	alerts := []models.GettableAlert{
+		models.GettableAlert{
+			Alert: models.Alert{
+				Labels: models.LabelSet{
+					"status":      "active",
+					"alertname":   "E2 CONNECTIVITY LOST TO G-NODEB",
+					"severity":    "MAJOR",
+					"service":     "RIC:UEEC",
+					"system_name": "RIC",
+				},
+			},
+			Annotations: models.LabelSet{
+				"alarm_id": "8006",
+				"additional_info": "ethernet",
+				"description": "eth12",
+				"instructions": "Not defined",
+				"summary": "Communication error",
+			},
+			EndsAt: &tim,
+			StartsAt: &tim,
+			UpdatedAt: &tim,
+			Fingerprint: &fingerprint,
+		},
+	}
+
+	url := "/api/v2/alerts?active=true&inhibited=true&silenced=true&unprocessed=true"
+	ts := CreateHTTPServer(t, "GET", url, 9093, http.StatusOK, alerts)
+	defer ts.Close()
+
+	resp, err := sbiClient.GetAlerts()
+
+	assert.Equal(t, true, err == nil)
+	assert.Equal(t, true, resp != nil)
+
+	for _, alert := range resp.Payload {
+		assert.Equal(t, alert.Annotations, alerts[0].Annotations)
+		assert.Equal(t, alert.Alert, alerts[0].Alert)
+		assert.Equal(t, alert.Fingerprint, alerts[0].Fingerprint)
+	}
 }
 
 func TestGetAllPodStatus(t *testing.T) {
@@ -212,8 +260,8 @@ func TestTeardown(t *testing.T) {
 	n.Stop()
 }
 
-func CreateHTTPServer(t *testing.T, method, url string, status int, respData interface{}) *httptest.Server {
-	l, err := net.Listen("tcp", "localhost:8080")
+func CreateHTTPServer(t *testing.T, method, url string, port, status int, respData interface{}) *httptest.Server {
+	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		t.Error("Failed to create listener: " + err.Error())
 	}

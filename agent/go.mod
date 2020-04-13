@@ -2,7 +2,7 @@ module gerrit.oran-osc.org/r/ric-plt/o1mediator
 
 go 1.12
 
-replace gerrit.o-ran-sc.org/r/ric-plt/xapp-frame => gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.5
+replace gerrit.o-ran-sc.org/r/ric-plt/xapp-frame => gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.7
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.0
 
@@ -24,10 +24,13 @@ require (
 	github.com/go-openapi/validate v0.19.6
 	github.com/gorilla/mux v1.7.1
 	github.com/jessevdk/go-flags v1.4.0
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20190314100340-2693aad1ed75
+	github.com/prometheus/alertmanager v0.20.0
 	github.com/segmentio/ksuid v1.0.2
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect
 	github.com/valyala/fastjson v1.4.1
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect

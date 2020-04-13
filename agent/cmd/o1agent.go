@@ -77,12 +77,11 @@ func (o *O1Agent) Sighandler() {
 }
 
 func NewO1Agent() *O1Agent {
-	host := viper.GetString("sbi.appmgrService")
-	baseUrl := viper.GetString("sbi.baseUrl")
-	prot := viper.GetString("sbi.proto")
+	appmgrAddr := viper.GetString("sbi.appmgrAddr")
+	alertmgrAddr := viper.GetString("sbi.alertmgrAddr")
 	timeout := viper.GetInt("sbi.timeout")
 
-	sbiClient := sbi.NewSBIClient(host, baseUrl, []string{prot}, timeout)
+	sbiClient := sbi.NewSBIClient(appmgrAddr, alertmgrAddr, timeout)
 
 	return &O1Agent{
 		rmrReady:  false,

@@ -1,0 +1,79 @@
+module o-ran-sc-ric-alarm-v1 {
+    yang-version 1;
+    namespace "urn:o-ran:ric:alarm:1.0";
+    prefix rxad;
+
+    organization
+        "O-RAN Software Community";
+    contact
+        "www.o-ran.org";
+    description
+        "This module defines active alarm information visible to operators
+
+        Copyright 2020 the O-RAN Alliance.
+
+        Licensed under the Apache License, Version 2.0 (the 'License');
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an 'AS IS' BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.";
+
+    revision 2020-01-29 {
+        description
+            "initial revision";
+        reference
+            "O-RAN-OAM-Interface-Specification (O1)";
+    }
+
+    grouping alarm-info {
+        leaf alarm-id {
+            type string;
+            description
+                "The unique alarm ID";
+        }
+        leaf alarm-text {
+            type string;
+            description
+                "The detailed text of the alarm";
+        }
+        leaf severity {
+            type health-status;
+            description
+                "The severity of the alarm";
+        }
+        leaf status {
+            type health-status;
+            description
+                "The status of the alarm";
+        }
+        leaf additional-info {
+            type health-status;
+            description
+                "Additional info about the alarm";
+        }
+        description
+            "Alarm information";
+    }
+
+    container ric {
+        container alarms {
+            config false;
+            list alarm {
+                key "alarm-id";
+                uses alarm-info;
+                description
+                    "The list of active alarms in RIC";
+            }
+            description
+                "State data container of the alarms";
+        }
+        description
+            "Root object for RIC alarms";
+    }
+}

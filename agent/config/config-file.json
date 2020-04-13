@@ -14,9 +14,8 @@
         "numWorkers": 1
     },
     "sbi": {
-        "appmgrService": "service-ricplt-appmgr-http:8080",
-        "baseUrl": "/ric/v1",
-        "proto": "http",
+        "appmgrAddr": "service-ricplt-appmgr-http:8080",
+        "alertmgrAddr": "elfkp-prometheus-alertmanager:9093",
         "timeout": 30
     },
     "nbi": {
