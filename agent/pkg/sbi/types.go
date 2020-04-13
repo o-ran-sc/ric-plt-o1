@@ -23,13 +23,13 @@ import (
 	"time"
 
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
+	"github.com/prometheus/alertmanager/api/v2/client/alert"
 )
 
 type SBIClient struct {
-	host    string
-	baseUrl string
-	prot    []string
-	timeout time.Duration
+	appmgrAddr   string
+	alertmgrAddr string
+	timeout 	 time.Duration
 }
 
 type SBIClientInterface interface {
@@ -42,4 +42,6 @@ type SBIClientInterface interface {
 	ModifyXappConfig(xappConfig *apimodel.XAppConfig) error
 
 	GetAllPodStatus(namespace string) ([]PodStatus, error)
+
+	GetAlerts() (*alert.GetAlertsOK, error)
 }

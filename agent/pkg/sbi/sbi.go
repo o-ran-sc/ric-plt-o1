@@ -29,10 +29,16 @@ import (
 	"strings"
 	"time"
 
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	clientruntime "github.com/go-openapi/runtime/client"
+	"github.com/prometheus/alertmanager/api/v2/client"
+	"github.com/prometheus/alertmanager/api/v2/client/alert"
+
 	apiclient "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrclient"
 	apixapp "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrclient/xapp"
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+
 )
 
 type PodStatus struct {
@@ -43,12 +49,12 @@ type PodStatus struct {
 
 var log = xapp.Logger
 
-func NewSBIClient(host, baseUrl string, prot []string, timo int) *SBIClient {
-	return &SBIClient{host, baseUrl, prot, time.Duration(timo) * time.Second}
+func NewSBIClient(appmgrAddr, alertmgrAddr string, timo int) *SBIClient {
+	return &SBIClient{appmgrAddr, alertmgrAddr, time.Duration(timo) * time.Second}
 }
 
-func (s *SBIClient) CreateTransport() *apiclient.RICAppmgr {
-	return apiclient.New(httptransport.New(s.host, s.baseUrl, s.prot), strfmt.Default)
+func (s *SBIClient) CreateTransport(host string) *apiclient.RICAppmgr {
+	return apiclient.New(httptransport.New(host, "/ric/v1/", []string{"http"}), strfmt.Default)
 }
 
 func (s *SBIClient) BuildXappDescriptor(name, namespace, release, version string) *apimodel.XappDescriptor {
@@ -64,7 +70,7 @@ func (s *SBIClient) DeployXapp(xappDesc *apimodel.XappDescriptor) error {
 	params := apixapp.NewDeployXappParamsWithTimeout(s.timeout).WithXappDescriptor(xappDesc)
 	log.Info("SBI: DeployXapp=%v", params)
 
-	result, err := s.CreateTransport().Xapp.DeployXapp(params)
+	result, err := s.CreateTransport(s.appmgrAddr).Xapp.DeployXapp(params)
 	if err != nil {
 		log.Error("SBI: DeployXapp unsuccessful: %v", err)
 	} else {
@@ -82,7 +88,7 @@ func (s *SBIClient) UndeployXapp(xappDesc *apimodel.XappDescriptor) error {
 	params := apixapp.NewUndeployXappParamsWithTimeout(s.timeout).WithXAppName(name)
 	log.Info("SBI: UndeployXapp=%v", params)
 
-	result, err := s.CreateTransport().Xapp.UndeployXapp(params)
+	result, err := s.CreateTransport(s.appmgrAddr).Xapp.UndeployXapp(params)
 	if err != nil {
 		log.Error("SBI: UndeployXapp unsuccessful: %v", err)
 	} else {
@@ -93,7 +99,7 @@ func (s *SBIClient) UndeployXapp(xappDesc *apimodel.XappDescriptor) error {
 
 func (s *SBIClient) GetDeployedXapps() error {
 	params := apixapp.NewGetAllXappsParamsWithTimeout(s.timeout)
-	result, err := s.CreateTransport().Xapp.GetAllXapps(params)
+	result, err := s.CreateTransport(s.appmgrAddr).Xapp.GetAllXapps(params)
 	if err != nil {
 		log.Error("GET unsuccessful: %v", err)
 	} else {
@@ -116,7 +122,7 @@ func (s *SBIClient) BuildXappConfig(name, namespace string, configData interface
 
 func (s *SBIClient) ModifyXappConfig(xappConfig *apimodel.XAppConfig) error {
 	params := apixapp.NewModifyXappConfigParamsWithTimeout(s.timeout).WithXAppConfig(xappConfig)
-	result, err := s.CreateTransport().Xapp.ModifyXappConfig(params)
+	result, err := s.CreateTransport(s.appmgrAddr).Xapp.ModifyXappConfig(params)
 	if err != nil {
 		log.Error("SBI: ModifyXappConfig unsuccessful: %v", err)
 	} else {
@@ -180,4 +186,17 @@ var CommandExec = func(args string) (string, error) {
 	}
 	xapp.Logger.Debug("Command executed successfully!")
 	return stdout.String(), nil
+}
+
+func (s *SBIClient) GetAlerts() (*alert.GetAlertsOK, error) {
+	xapp.Logger.Info("Fetching alerts ...")
+
+	cr := clientruntime.New(s.alertmgrAddr, "/api/v2", []string{"http"})
+	resp, err := client.New(cr, strfmt.Default).Alert.GetAlerts(nil)
+	if err != nil {
+		xapp.Logger.Error("Fetching alerts failed with error: %v", err)
+		return nil, err
+	}
+
+	return resp, nil
 }

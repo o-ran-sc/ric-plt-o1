@@ -146,6 +146,7 @@ RUN ./build_o1agent.sh
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-xapp-desc-v1.yang
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-ueec-config-v1.yang
 RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-gnb-status-v1.yang
+RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-alarm-v1.yang
 
 CMD ["/bin/bash"]
 

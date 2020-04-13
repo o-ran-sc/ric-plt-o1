@@ -129,6 +129,11 @@ func (n *Nbi) SubscribeStatusData() bool {
 	if ok := n.SubscribeStatus("o-ran-sc-ric-xapp-desc-v1", "/o-ran-sc-ric-xapp-desc-v1:ric/health"); !ok {
 		return ok
 	}
+
+	if ok := n.SubscribeStatus("o-ran-sc-ric-alarm-v1", "/o-ran-sc-ric-alarm-v1:ric/alarms"); !ok {
+		return ok
+	}
+
 	return true
 }
 
@@ -259,16 +264,31 @@ func (n *Nbi) ParseJsonArray(dsContent, model, top, elem string) ([]*fastjson.Va
 }
 
 //export nbiGnbStateCB
-func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, req_xpath *C.char, reqid C.uint32_t, parent **C.char) C.int {
-	log.Info("NBI: Module state data for module='%s' path='%s' rpath='%s' requested [id=%d]", C.GoString(module), C.GoString(xpath), C.GoString(req_xpath), reqid)
+func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, rpath *C.char, reqid C.uint32_t, parent **C.char) C.int {
+	mod := C.GoString(module)
+	log.Info("nbiGnbStateCB: module='%s' xpath='%s' rpath='%s' [id=%d]", mod, C.GoString(xpath), C.GoString(rpath), reqid)
 
-	if C.GoString(module) == "o-ran-sc-ric-xapp-desc-v1" {
+	if mod == "o-ran-sc-ric-xapp-desc-v1" {
 		podList, _ := sbiClient.GetAllPodStatus("ricxapp")
 		for _, pod := range podList {
 			path := fmt.Sprintf("/o-ran-sc-ric-xapp-desc-v1:ric/health/status[name='%s']", pod.Name)
 			nbiClient.CreateNewElement(session, parent, path, "name", path)
 			nbiClient.CreateNewElement(session, parent, path, "health", pod.Health)
 			nbiClient.CreateNewElement(session, parent, path, "status", pod.Status)
+		}
+		return C.SR_ERR_OK
+	}
+
+	if mod == "o-ran-sc-ric-alarm-v1" {
+		alerts, _ := sbiClient.GetAlerts()
+		for _, alert := range alerts.Payload {
+			id := alert.Annotations["alarm_id"]
+			path := fmt.Sprintf("/o-ran-sc-ric-alarm-v1:ric/alarms/alarm[alarm-id='%s']", id)
+			nbiClient.CreateNewElement(session, parent, path, "alarm-id", id)
+			nbiClient.CreateNewElement(session, parent, path, "fault-text", alert.Alert.Labels["alertname"])
+			nbiClient.CreateNewElement(session, parent, path, "severity", alert.Alert.Labels["severity"])
+			nbiClient.CreateNewElement(session, parent, path, "status", alert.Alert.Labels["status"])
+			nbiClient.CreateNewElement(session, parent, path, "additional-info", alert.Annotations["additional_info"])
 		}
 		return C.SR_ERR_OK
 	}
