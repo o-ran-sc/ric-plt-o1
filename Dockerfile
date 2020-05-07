@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 #----------------------------------------------------------
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:4-u18.04-nng AS o1mediator-build
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:7-u18.04 AS o1mediator-build
 
 RUN apt-get update -y && apt-get install -y jq \
       git \
@@ -102,7 +102,7 @@ RUN \
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=3.6.3
+ARG RMRVERSION=4.0.2
 ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
 ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
