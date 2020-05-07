@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 #----------------------------------------------------------
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:4-u18.04-nng AS o1mediator-build
+FROM nexus3.o-ran-sc.org:10004/o-ran-sc/bldr-ubuntu18-c-go:8-u18.04 AS o1mediator-build
 
 RUN apt-get update -y && apt-get install -y jq \
       git \
@@ -90,21 +90,17 @@ RUN \
 RUN \
       cd /opt/dev && \
       git clone https://github.com/CESNET/Netopeer2.git && \
-      cd Netopeer2/server && mkdir build && cd build && \
+      cd Netopeer2 && mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DNP2SRV_DATA_CHANGE_TIMEOUT=30000 -DNP2SRV_DATA_CHANGE_WAIT=ON .. && \
-      make -j2 && \
-      make install && \
-      cd ../../cli && mkdir build && cd build && \
-      cmake -DCMAKE_BUILD_TYPE:String="Release" .. && \
       make -j2 && \
       make install
       
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=3.6.3
-ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
-ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
+ARG RMRVERSION=4.0.2
+ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
+ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
 RUN wget --content-disposition ${RMRLIBURL} && dpkg -i rmr_${RMRVERSION}_amd64.deb
 RUN wget --content-disposition ${RMRDEVURL} && dpkg -i rmr-dev_${RMRVERSION}_amd64.deb
