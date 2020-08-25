@@ -76,6 +76,15 @@ RUN \
       make install && make sr_clean && \
       ldconfig
 
+# libssh 0.8.0
+RUN \
+      cd /opt/dev && \
+      git clone https://git.libssh.org/projects/libssh.git && cd libssh && \
+      mkdir build && cd build && \
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE="Release" -DWITH_ZLIB=ON -DWITH_NACL=OFF -DWITH_PCAP=OFF .. && \
+      make -j2 && \
+      make install
+
 # libnetconf2
 RUN \
       cd /opt/dev && \
