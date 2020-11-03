@@ -29,7 +29,7 @@ import (
 type SBIClient struct {
 	appmgrAddr   string
 	alertmgrAddr string
-	timeout 	 time.Duration
+	timeout      time.Duration
 }
 
 type SBIClientInterface interface {

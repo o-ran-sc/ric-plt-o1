@@ -33,6 +33,7 @@ import (
 
 var Version string
 var Hash string
+var osExit = os.Exit
 
 type O1Agent struct {
 	rmrReady  bool
@@ -73,7 +74,7 @@ func (o *O1Agent) Sighandler() {
 
 	<-o.sigChan
 	o.nbiClient.Stop()
-	os.Exit(1)
+	osExit(1)
 }
 
 func NewO1Agent() *O1Agent {

@@ -38,7 +38,6 @@ import (
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
-
 )
 
 type PodStatus struct {
@@ -179,9 +178,9 @@ var CommandExec = func(args string) (string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	xapp.Logger.Debug("Running command: '%s'", cmd)
+	xapp.Logger.Debug("Running command: '%s'", strings.Join(cmd.Args, " "))
 	if err := cmd.Run(); err != nil {
-		xapp.Logger.Error("Command failed (%s): %v - %s", cmd, err.Error(), stderr.String())
+		xapp.Logger.Error("Command failed (%s): %v - %s", strings.Join(cmd.Args, " "), err.Error(), stderr.String())
 		return "", err
 	}
 	xapp.Logger.Debug("Command executed successfully!")
