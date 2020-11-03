@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+	"os"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
@@ -269,7 +270,12 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	log.Info("nbiGnbStateCB: module='%s' xpath='%s' rpath='%s' [id=%d]", mod, C.GoString(xpath), C.GoString(rpath), reqid)
 
 	if mod == "o-ran-sc-ric-xapp-desc-v1" {
-		podList, _ := sbiClient.GetAllPodStatus("ricxapp")
+	        xappnamespace := os.Getenv("XAPP_NAMESPACE")
+	        if xappnamespace == "" {
+	            xappnamespace = "ricxapp"
+	        }
+		podList, _ := sbiClient.GetAllPodStatus(xappnamespace)
+
 		for _, pod := range podList {
 			path := fmt.Sprintf("/o-ran-sc-ric-xapp-desc-v1:ric/health/status[name='%s']", pod.Name)
 			nbiClient.CreateNewElement(session, parent, path, "name", path)
