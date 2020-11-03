@@ -35,4 +35,4 @@ GO111MODULE=on GO_ENABLED=0 GOOS=linux
 go build -a -installsuffix cgo -ldflags "-X main.Version=$tag -X main.Hash=$hash" -o o1agent ./cmd/o1agent.go
 
 # Run o1agent UT
-go test -v -p 1 -cover -coverprofile cover.out ./pkg/nbi/ -c -o ./nbi_test && ./nbi_test
+go test -v -p 1 -cover -coverprofile=/go/src/ws/agent/coverage.out ./...

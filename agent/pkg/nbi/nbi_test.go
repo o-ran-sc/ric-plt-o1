@@ -21,6 +21,7 @@ package nbi
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
@@ -28,12 +29,12 @@ import (
 	"os"
 	"testing"
 	"time"
-	"github.com/go-openapi/strfmt"
-	"fmt"
 
-	"github.com/prometheus/alertmanager/api/v2/models"
+	"errors"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	apimodel "gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/appmgrmodel"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
+	"github.com/stretchr/testify/mock"
 )
 
 var XappConfig = `{
@@ -69,17 +70,13 @@ var XappDescriptor = `{
 	}
   }`
 
-var kpodOutput = `
-NAME                               READY   STATUS    RESTARTS   AGE
-ricxapp-ueec-7bfdd587db-2jl9j      1/1     Running   53         29d
-ricxapp-anr-6748846478-8hmtz       1-1     Running   1          29d
-ricxapp-dualco-7f76f65c99-5p6c6    0/1     Running   1          29d
-`
-
 var n *Nbi
+var rnibM *rnibMock
 
 // Test cases
 func TestMain(M *testing.M) {
+	rnibM = new(rnibMock)
+	rnib = rnibM
 	n = NewNbi(sbi.NewSBIClient("localhost:8080", "localhost:9093", 5))
 	go n.Start()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -97,6 +94,69 @@ func TestModifyConfigmap(t *testing.T) {
 
 	err = n.ManageConfigmaps("o-ran-sc-ric-ueec-config-v1", XappConfig, 1)
 	assert.Equal(t, true, err == nil)
+}
+
+func TestXappDescModuleChangeCB(t *testing.T) {
+	ok := n.testModuleChangeCB("o-ran-sc-ric-xapp-desc-v1")
+	assert.True(t, ok)
+}
+
+func TestUeecConfigModuleChangeCB(t *testing.T) {
+	ok := n.testModuleChangeCB("o-ran-sc-ric-ueec-config-v1")
+	assert.True(t, ok)
+}
+
+func TestUeecConfigDoneModuleChangeCB(t *testing.T) {
+	ok := n.testModuleChangeCBDone("o-ran-sc-ric-ueec-config-v1")
+	assert.True(t, ok)
+}
+
+func TestXappDescGnbStateCB(t *testing.T) {
+	ok := n.testGnbStateCB("o-ran-sc-ric-xapp-desc-v1")
+	assert.True(t, ok)
+}
+
+func TestAlarmGnbStateCB(t *testing.T) {
+	ok := n.testGnbStateCB("o-ran-sc-ric-alarm-v1")
+	assert.True(t, ok)
+}
+
+func TestGnbStateCB(t *testing.T) {
+	var rnibOk xapp.RNIBIRNibError
+	var gNbIDs []*xapp.RNIBNbIdentity
+	gNbID := xapp.RNIBNbIdentity{
+		InventoryName: "test-gnb",
+	}
+	gNbIDs = append(gNbIDs, &gNbID)
+	nodeInfo := xapp.RNIBNodebInfo{}
+
+	rnibM.On("GetListGnbIds").Return(gNbIDs, rnibOk).Once()
+	rnibM.On("GetNodeb", mock.Anything).Return(&nodeInfo, rnibOk).Once()
+	ok := n.testGnbStateCB("")
+	assert.True(t, ok)
+}
+
+func TestGnbStateCBWhenRnibGetListGnbIdsFails(t *testing.T) {
+	var rnibErr xapp.RNIBIRNibError = errors.New("Some RNIB Error")
+
+	rnibM.On("GetListGnbIds").Return(nil, rnibErr).Once()
+	ok := n.testGnbStateCB("")
+	assert.True(t, ok)
+}
+
+func TestGnbStateCBWhenRnibGetNodebFails(t *testing.T) {
+	var rnibOk xapp.RNIBIRNibError
+	var rnibErr xapp.RNIBIRNibError = errors.New("Some RNIB Error")
+	var gNbIDs []*xapp.RNIBNbIdentity
+	gNbID := xapp.RNIBNbIdentity{
+		InventoryName: "test-gnb",
+	}
+	gNbIDs = append(gNbIDs, &gNbID)
+
+	rnibM.On("GetListGnbIds").Return(gNbIDs, rnibOk).Once()
+	rnibM.On("GetNodeb", mock.Anything).Return(nil, rnibErr).Once()
+	ok := n.testGnbStateCB("")
+	assert.True(t, ok)
 }
 
 func TestDeployXApp(t *testing.T) {
@@ -129,80 +189,6 @@ func TestGetDeployedXapps(t *testing.T) {
 
 	err := sbiClient.GetDeployedXapps()
 	assert.Equal(t, true, err == nil)
-}
-
-func TestGetAlerts(t *testing.T) {
-	tim := strfmt.DateTime(time.Now())
-	fingerprint := "34c8f717936f063f"
-
-	alerts := []models.GettableAlert{
-		models.GettableAlert{
-			Alert: models.Alert{
-				Labels: models.LabelSet{
-					"status":      "active",
-					"alertname":   "E2 CONNECTIVITY LOST TO G-NODEB",
-					"severity":    "MAJOR",
-					"service":     "RIC:UEEC",
-					"system_name": "RIC",
-				},
-			},
-			Annotations: models.LabelSet{
-				"alarm_id": "8006",
-				"additional_info": "ethernet",
-				"description": "eth12",
-				"instructions": "Not defined",
-				"summary": "Communication error",
-			},
-			EndsAt: &tim,
-			StartsAt: &tim,
-			UpdatedAt: &tim,
-			Fingerprint: &fingerprint,
-		},
-	}
-
-	url := "/api/v2/alerts?active=true&inhibited=true&silenced=true&unprocessed=true"
-	ts := CreateHTTPServer(t, "GET", url, 9093, http.StatusOK, alerts)
-	defer ts.Close()
-
-	resp, err := sbiClient.GetAlerts()
-
-	assert.Equal(t, true, err == nil)
-	assert.Equal(t, true, resp != nil)
-
-	for _, alert := range resp.Payload {
-		assert.Equal(t, alert.Annotations, alerts[0].Annotations)
-		assert.Equal(t, alert.Alert, alerts[0].Alert)
-		assert.Equal(t, alert.Fingerprint, alerts[0].Fingerprint)
-	}
-}
-
-func TestGetAllPodStatus(t *testing.T) {
-	sbi.CommandExec = func(args string) (out string, err error) {
-		assert.Equal(t, "/usr/local/bin/kubectl get pod -n ricxapp", args)
-		return kpodOutput, nil
-	}
-
-	expectedPodList := []sbi.PodStatus{
-		sbi.PodStatus{
-			Name:   "ueec",
-			Health: "healthy",
-			Status: "Running",
-		},
-		sbi.PodStatus{
-			Name:   "anr",
-			Health: "unavailable",
-			Status: "Running",
-		},
-		sbi.PodStatus{
-			Name:   "dualco",
-			Health: "unhealthy",
-			Status: "Running",
-		},
-	}
-
-	podList, err := sbiClient.GetAllPodStatus("ricxapp")
-	assert.Equal(t, true, err == nil)
-	assert.Equal(t, podList, expectedPodList)
 }
 
 func TestErrorCases(t *testing.T) {
@@ -295,4 +281,24 @@ func ConfigMatcher(result, expected *apimodel.XAppConfig) bool {
 		return true
 	}
 	return false
+}
+
+type rnibMock struct {
+	mock.Mock
+}
+
+func (m *rnibMock) GetListGnbIds() ([]*xapp.RNIBNbIdentity, xapp.RNIBIRNibError) {
+	a := m.Called()
+	if a.Get(0) == nil {
+		return nil, a.Error(1)
+	}
+	return a.Get(0).([]*xapp.RNIBNbIdentity), a.Error(1)
+}
+
+func (m *rnibMock) GetNodeb(invName string) (*xapp.RNIBNodebInfo, xapp.RNIBIRNibError) {
+	a := m.Called(invName)
+	if a.Get(0) == nil {
+		return nil, a.Error(1)
+	}
+	return a.Get(0).(*xapp.RNIBNodebInfo), a.Error(1)
 }

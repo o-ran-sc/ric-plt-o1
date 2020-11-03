@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 	"unsafe"
-	"os"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"gerrit.oran-osc.org/r/ric-plt/o1mediator/pkg/sbi"
@@ -48,6 +47,7 @@ import "C"
 var sbiClient sbi.SBIClientInterface
 var nbiClient *Nbi
 var log = xapp.Logger
+var rnib iRnib = xapp.Rnib
 
 func NewNbi(s sbi.SBIClientInterface) *Nbi {
 	sbiClient = s
@@ -234,7 +234,11 @@ func (n *Nbi) ManageConfigmaps(module, configJson string, oper int) error {
 	root := fmt.Sprintf("%s:ric", module)
 	appName := string(value.GetStringBytes(root, "config", "name"))
 	namespace := string(value.GetStringBytes(root, "config", "namespace"))
-	control := value.Get(root, "config", "control").String()
+	controlVal := value.Get(root, "config", "control")
+	if controlVal == nil {
+		return nil
+	}
+	control := controlVal.String()
 
 	var f interface{}
 	err = json.Unmarshal([]byte(strings.ReplaceAll(control, "\\", "")), &f)
@@ -270,12 +274,7 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	log.Info("nbiGnbStateCB: module='%s' xpath='%s' rpath='%s' [id=%d]", mod, C.GoString(xpath), C.GoString(rpath), reqid)
 
 	if mod == "o-ran-sc-ric-xapp-desc-v1" {
-	        xappnamespace := os.Getenv("XAPP_NAMESPACE")
-	        if xappnamespace == "" {
-	            xappnamespace = "ricxapp"
-	        }
-		podList, _ := sbiClient.GetAllPodStatus(xappnamespace)
-
+		podList, _ := sbiClient.GetAllPodStatus("ricxapp")
 		for _, pod := range podList {
 			path := fmt.Sprintf("/o-ran-sc-ric-xapp-desc-v1:ric/health/status[name='%s']", pod.Name)
 			nbiClient.CreateNewElement(session, parent, path, "name", path)
@@ -286,20 +285,21 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	}
 
 	if mod == "o-ran-sc-ric-alarm-v1" {
-		alerts, _ := sbiClient.GetAlerts()
-		for _, alert := range alerts.Payload {
-			id := alert.Annotations["alarm_id"]
-			path := fmt.Sprintf("/o-ran-sc-ric-alarm-v1:ric/alarms/alarm[alarm-id='%s']", id)
-			nbiClient.CreateNewElement(session, parent, path, "alarm-id", id)
-			nbiClient.CreateNewElement(session, parent, path, "fault-text", alert.Alert.Labels["alertname"])
-			nbiClient.CreateNewElement(session, parent, path, "severity", alert.Alert.Labels["severity"])
-			nbiClient.CreateNewElement(session, parent, path, "status", alert.Alert.Labels["status"])
-			nbiClient.CreateNewElement(session, parent, path, "additional-info", alert.Annotations["additional_info"])
+		if alerts, _ := sbiClient.GetAlerts(); alerts != nil {
+			for _, alert := range alerts.Payload {
+				id := alert.Annotations["alarm_id"]
+				path := fmt.Sprintf("/o-ran-sc-ric-alarm-v1:ric/alarms/alarm[alarm-id='%s']", id)
+				nbiClient.CreateNewElement(session, parent, path, "alarm-id", id)
+				nbiClient.CreateNewElement(session, parent, path, "fault-text", alert.Alert.Labels["alertname"])
+				nbiClient.CreateNewElement(session, parent, path, "severity", alert.Alert.Labels["severity"])
+				nbiClient.CreateNewElement(session, parent, path, "status", alert.Alert.Labels["status"])
+				nbiClient.CreateNewElement(session, parent, path, "additional-info", alert.Annotations["additional_info"])
+			}
 		}
 		return C.SR_ERR_OK
 	}
 
-	gnbs, err := xapp.Rnib.GetListGnbIds()
+	gnbs, err := rnib.GetListGnbIds()
 	if err != nil || len(gnbs) == 0 {
 		log.Info("Rnib.GetListGnbIds() returned elementCount=%d err:%v", len(gnbs), err)
 		return C.SR_ERR_OK
@@ -307,7 +307,7 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 
 	for _, gnb := range gnbs {
 		ranName := gnb.GetInventoryName()
-		info, err := xapp.Rnib.GetNodeb(ranName)
+		info, err := rnib.GetNodeb(ranName)
 		if err != nil {
 			log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
 			continue
@@ -386,4 +386,45 @@ func (n *Nbi) NodeType2Str(ntype int) string {
 		return "gnb"
 	}
 	return "not-specified"
+}
+
+func (n *Nbi) testModuleChangeCB(module string) bool {
+	var event C.sr_event_t = C.SR_EV_CHANGE
+	reqID := C.int(100)
+	modName := C.CString(module)
+	defer C.free(unsafe.Pointer(modName))
+
+	if ret := nbiModuleChangeCB(n.session, modName, nil, event, reqID); ret != C.SR_ERR_OK {
+		return false
+	}
+	return true
+}
+
+func (n *Nbi) testModuleChangeCBDone(module string) bool {
+	var event C.sr_event_t = C.SR_EV_DONE
+	reqID := C.int(100)
+	modName := C.CString(module)
+	defer C.free(unsafe.Pointer(modName))
+
+	if ret := nbiModuleChangeCB(n.session, modName, nil, event, reqID); ret != C.SR_ERR_OK {
+		return false
+	}
+	return true
+}
+
+func (n *Nbi) testGnbStateCB(module string) bool {
+	modName := C.CString(module)
+	defer C.free(unsafe.Pointer(modName))
+	reqID := C.uint32_t(100)
+	parent := make([]*C.char, 1)
+
+	if ret := nbiGnbStateCB(n.session, modName, nil, nil, reqID, &parent[0]); ret != C.SR_ERR_OK {
+		return false
+	}
+	return true
+}
+
+type iRnib interface {
+	GetListGnbIds() ([]*xapp.RNIBNbIdentity, xapp.RNIBIRNibError)
+	GetNodeb(invName string) (*xapp.RNIBNodebInfo, xapp.RNIBIRNibError)
 }
