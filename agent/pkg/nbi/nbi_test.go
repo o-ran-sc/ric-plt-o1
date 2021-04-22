@@ -55,6 +55,10 @@ var XappConfig = `{
 	}
   }`
 
+var XappConfigErr = `{
+       "ric": {
+  }`
+
 var XappDescriptor = `{
 	"o-ran-sc-ric-xapp-desc-v1:ric": {
 	  "xapps": {
@@ -215,6 +219,18 @@ func TestErrorCases(t *testing.T) {
 	// Invalid operation
 	err = n.ManageConfigmaps("o-ran-sc-ric-ueec-config-v1", "{}", 0)
 	assert.Equal(t, true, err != nil)
+
+        //Invalid json 
+        err = n.ManageConfigmaps("o-ran-sc-ric-ueec-config-v1", XappConfigErr, 1)
+        assert.Equal(t, true, err != nil)
+
+	// Invalid operation
+	err = n.ManageXapps("o-ran-sc-ric-ueec-config-v1", XappDescriptor, 5)
+	assert.Equal(t, true, err == nil)
+
+        //Invalid json
+        err = n.ManageXapps("o-ran-sc-ric-ueec-config-v1", XappConfigErr, 1)
+        assert.Equal(t, true, err != nil)
 }
 
 func TestConnStatus2Str(t *testing.T) {
