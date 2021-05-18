@@ -58,6 +58,7 @@ func (o *O1Agent) StatusCB() bool {
 }
 
 func (o *O1Agent) Run() {
+        xapp.Logger.SetFormat(0)
 	xapp.Logger.SetMdc("o1agent", fmt.Sprintf("%s:%s", Version, Hash))
 	xapp.SetReadyCB(func(d interface{}) { o.rmrReady = true }, true)
 	xapp.AddConfigChangeListener(o.ConfigChangeHandler)
