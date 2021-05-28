@@ -183,6 +183,10 @@ RUN apt-get update -y && apt-get install -y jq \
 
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# update password policy 
+RUN \
+     sed -i 's/pam_unix.so obscure sha512/pam_unix.so obscure sha512 rounds=12000/' /etc/pam.d/common-password
+
 # add netconf user
 RUN \
       adduser --system netconf && \
