@@ -22,6 +22,7 @@ RUN apt-get update -y && apt-get install -y jq \
       build-essential \
       vim \
       supervisor \
+      libpcre2-dev \
       libpcre3-dev \
       pkg-config \
       libavl-dev \
@@ -167,6 +168,7 @@ RUN apt-get update -y && apt-get install -y jq \
       supervisor \
       openssl \
       python-pip \
+      libpcre2-dev \
       libpcre3-dev \
       pkg-config \
       libavl-dev \
@@ -182,6 +184,10 @@ RUN apt-get update -y && apt-get install -y jq \
       && apt-get clean
 
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# update password policy 
+RUN \
+     sed -i 's/pam_unix.so obscure sha512/pam_unix.so obscure sha512 rounds=12000/' /etc/pam.d/common-password
 
 # add netconf user
 RUN \
