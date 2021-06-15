@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "48b9f814_f12d0a44",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000002
+      },
+      "writtenOn": "2021-06-15T11:57:45Z",
+      "side": 1,
+      "message": "For review. Can you review the change and if the change looks ok merge the change. Thanks!",
+      "revId": "ad675a6f028f1b9f4a52e35fe770fae3cae50f94",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
