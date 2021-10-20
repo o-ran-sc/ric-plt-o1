@@ -16,13 +16,18 @@
 #----------------------------------------------------------
 FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 AS o1mediator-build
 
+RUN apt update && apt install --reinstall -y \
+  ca-certificates \
+  && \
+  update-ca-certificates
+
 RUN apt-get update -y && apt-get install -y jq \
       git \
       cmake \
       build-essential \
       vim \
       supervisor \
-      libpcre2-dev \
+      libpcre3-dev \
       pkg-config \
       libavl-dev \
       libev-dev \
@@ -58,7 +63,7 @@ WORKDIR /opt/dev
 # libyang
 RUN \
       cd /opt/dev && \
-      git clone https://github.com/CESNET/libyang.git && \
+      git clone -b libyang1 https://github.com/CESNET/libyang.git && \
       cd libyang && mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF .. && \
       make -j2 && \
@@ -67,7 +72,7 @@ RUN \
 # sysrepo
 RUN \
       cd /opt/dev && \
-      git clone https://github.com/sysrepo/sysrepo.git && \
+      git clone -b libyang1 https://github.com/sysrepo/sysrepo.git && \
       cd sysrepo && sed -i -e 's/2000/30000/g;s/5000/30000/g' src/common.h.in && \
       mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_TESTS=OFF -DREPOSITORY_LOC:PATH=/etc/sysrepo .. && \
@@ -87,7 +92,7 @@ RUN \
 # libnetconf2
 RUN \
       cd /opt/dev && \
-      git clone https://github.com/CESNET/libnetconf2.git && \
+      git clone -b libyang1 https://github.com/CESNET/libnetconf2.git && \
       cd libnetconf2 && mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DENABLE_BUILD_TESTS=OFF .. && \
       make -j2 && \
@@ -97,7 +102,7 @@ RUN \
 # netopeer2
 RUN \
       cd /opt/dev && \
-      git clone https://github.com/CESNET/Netopeer2.git && \
+      git clone -b libyang1 https://github.com/CESNET/Netopeer2.git && \
       cd Netopeer2 && mkdir build && cd build && \
       cmake -DCMAKE_BUILD_TYPE:String="Release" -DNP2SRV_DATA_CHANGE_TIMEOUT=30000 -DNP2SRV_DATA_CHANGE_WAIT=ON .. && \
       make -j2 && \
@@ -166,7 +171,7 @@ RUN apt-get update -y && apt-get install -y jq \
       supervisor \
       openssl \
       python-pip \
-      libpcre2-dev \
+      libpcre3-dev \
       pkg-config \
       libavl-dev \
       libev-dev \
