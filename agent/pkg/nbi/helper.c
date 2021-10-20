@@ -37,7 +37,6 @@ char * yang_data_sr2json(sr_session_ctx_t *session, const char *module_name, sr_
     sr_val_t *val = NULL;
     char *json_str = NULL;
     struct lyd_node *root = NULL;
-    struct lyd_node *node = NULL;
 
     rc = sr_get_changes_iter(session, "//." , &it);
     if (rc != SR_ERR_OK) {
@@ -49,9 +48,9 @@ char * yang_data_sr2json(sr_session_ctx_t *session, const char *module_name, sr_
         val = oper == SR_OP_CREATED ? new_value : old_value;
         char *leaf = sr_val_to_str(val);
         if (root) {
-            lyd_new_path(root, NULL, val->xpath, (void *) leaf, LYD_NEW_PATH_UPDATE, &node);
+            lyd_new_path(root, NULL, val->xpath, (void *) leaf, 0, 1);
         } else {
-            lyd_new_path(NULL, sr_get_context(sr_session_get_connection(session)), val->xpath, (void *) leaf, LYD_NEW_PATH_UPDATE, &root);
+            root = lyd_new_path(NULL, sr_get_context(sr_session_get_connection(session)), val->xpath, (void *) leaf, 0, 1);
         }
 
         sr_free_val(old_value);
@@ -62,7 +61,7 @@ char * yang_data_sr2json(sr_session_ctx_t *session, const char *module_name, sr_
     }
 
     if (root) {
-        lyd_print_mem(&json_str, root, LYD_JSON, LYD_PRINT_WITHSIBLINGS);
+        lyd_print_mem(&json_str, root, LYD_JSON, LYP_WITHSIBLINGS | LYP_FORMAT);
         printf("\n%s\n", json_str);
     }
 
@@ -86,7 +85,7 @@ char * get_data_json(sr_session_ctx_t *session, const char *module_name) {
     }
 
     if (data) {
-        lyd_print_mem(&json_str, data, LYD_JSON, LYD_PRINT_WITHSIBLINGS);
+        lyd_print_mem(&json_str, data, LYD_JSON, LYP_WITHSIBLINGS | LYP_FORMAT);
     }
     return json_str;
 }
@@ -101,11 +100,10 @@ int gnb_status_cb(sr_session_ctx_t *session, const char *module_name, const char
 
 void create_new_path(sr_session_ctx_t *session, char **parent, char *key, char *value) {
     struct lyd_node **p = (struct lyd_node **)parent;
-    struct lyd_node *node;
 
     if (*parent == NULL) {
-        lyd_new_path(NULL, sr_get_context(sr_session_get_connection(session)), key, value, LYD_NEW_PATH_UPDATE, &node);
+        *p = lyd_new_path(NULL, sr_get_context(sr_session_get_connection(session)), key, value, 0, 0);
     } else {
-        lyd_new_path(*p, sr_get_context(sr_session_get_connection(session)), key, value, LYD_NEW_PATH_UPDATE, &node);
+        lyd_new_path(*p, sr_get_context(sr_session_get_connection(session)), key, value, 0, 0);
     }
 }
