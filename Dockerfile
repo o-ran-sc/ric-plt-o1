@@ -38,7 +38,9 @@ RUN apt-get update -y && apt-get install -y jq \
       swig \
       iputils-ping \
       python-dev
-
+ENV GOLANG_VERSION 1.13.10
+RUN wget --quiet https://dl.google.com/go/go$GOLANG_VERSION.linux-amd64.tar.gz \
+        && tar xvzf go$GOLANG_VERSION.linux-amd64.tar.gz -C /usr/local 
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
 
