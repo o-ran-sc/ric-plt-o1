@@ -38,6 +38,10 @@ committers:
       email: 'abukar.mohamed@nokia.com'
       company: 'nokia'
       id: 'Nune'
+    - name: 'Akansha Keshri'
+      email: 'akansha.1.keshri@nokia.com'
+      company: 'nokia'
+      id: 'akeshri'
     - name: 'Erkki Hietala'
       email: 'erkki.hietala@nokia.com'
       company: 'nokia'
@@ -46,6 +50,6 @@ tsc:
     # yamllint disable rule:line-length
     approval: 'https://lists.o-ran-sc.org/g/toc/topic/new_repo_ricp_near_rt_ric/70071381'
     changes:
-        - type: ''
-          name: ''
+        - type: 'promotion'
+          name: 'Akansha Keshri'
           link: ''
