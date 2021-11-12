@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 #----------------------------------------------------------
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 AS o1mediator-build
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 AS o1mediator-build
 
 RUN apt update && apt install --reinstall -y \
   ca-certificates \
@@ -38,10 +38,10 @@ RUN apt-get update -y && apt-get install -y jq \
       swig \
       iputils-ping \
       python-dev
-ENV GOLANG_VERSION 1.13.10
-RUN wget --quiet https://dl.google.com/go/go$GOLANG_VERSION.linux-amd64.tar.gz \
-        && tar xvzf go$GOLANG_VERSION.linux-amd64.tar.gz -C /usr/local 
-ENV PATH="/usr/local/go/bin:${PATH}"
+#ENV GOLANG_VERSION 1.13.10
+#RUN wget --quiet https://dl.google.com/go/go$GOLANG_VERSION.linux-amd64.tar.gz \
+#        && tar xvzf go$GOLANG_VERSION.linux-amd64.tar.gz -C /usr/local 
+#ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
 
 # ======================================================================
@@ -162,7 +162,7 @@ RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-alarm-v1.yan
 CMD ["/bin/bash"]
 
 #----------------------------------------------------------
-FROM ubuntu:18.04 as o1mediator
+FROM ubuntu:20.04 as o1mediator
 
 RUN apt-get update -y && apt-get install -y jq \
       net-tools \
@@ -172,7 +172,7 @@ RUN apt-get update -y && apt-get install -y jq \
       nano \
       supervisor \
       openssl \
-      python-pip \
+      python3-pip \
       libpcre3-dev \
       pkg-config \
       libavl-dev \
