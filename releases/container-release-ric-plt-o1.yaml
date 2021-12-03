@@ -1,10 +1,10 @@
 ---
 distribution_type: container
-container_release_tag: 0.5.2
+container_release_tag: 0.5.3
 container_pull_registry: nexus3.o-ran-sc.org:10004
 container_push_registry: nexus3.o-ran-sc.org:10002
 project: ric-plt/o1
-ref: ad675a6f028f1b9f4a52e35fe770fae3cae50f94
+ref: 99850bdb7fbd96d1e31e53f5889d3eaf89f644d6
 containers:
     - name: ric-plt-o1
       version: 0.5.1
