@@ -113,7 +113,7 @@ RUN \
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=4.7.4
+ARG RMRVERSION=4.8.0
 ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
 ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
