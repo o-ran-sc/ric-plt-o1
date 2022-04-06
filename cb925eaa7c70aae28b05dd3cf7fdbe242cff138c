@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3d959fba_a995fec0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001752
+      },
+      "writtenOn": "2022-04-06T12:15:29Z",
+      "side": 1,
+      "message": "Issue: \nAlarm info is not displayed properly to user.\nIncorrect Alarm identifier displayed to user.\n\nRCA:  \nORAN-SC alarm yang file has field as \"alarm-text\" which used to display the alarm info to user, but during filling of alarm info in o1-mediator code, this  yang field is not used and instead \"fault-text“ field was used which leads to alarm info not displayed to the user.\nAlarm-identifier currently displayed is only running counter of alarm manger, instead some meaningful information specific to the alarm can be used as identifier.\n\nFix:\n\"alarm-text“ field is populated correctly.\n Alarm-identifier related to the alarm is used instead of a plain counter.\n",
+      "revId": "cb925eaa7c70aae28b05dd3cf7fdbe242cff138c",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
