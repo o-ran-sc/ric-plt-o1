@@ -293,10 +293,10 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	if mod == "o-ran-sc-ric-alarm-v1" {
 		if alerts, _ := sbiClient.GetAlerts(); alerts != nil {
 			for _, alert := range alerts.Payload {
-				id := alert.Annotations["alarm_id"]
+				id := alert.Annotations["specific_problem"]
 				path := fmt.Sprintf("/o-ran-sc-ric-alarm-v1:ric/alarms/alarm[alarm-id='%s']", id)
 				nbiClient.CreateNewElement(session, parent, path, "alarm-id", id)
-				nbiClient.CreateNewElement(session, parent, path, "fault-text", alert.Alert.Labels["alertname"])
+				nbiClient.CreateNewElement(session, parent, path, "alarm-text", alert.Alert.Labels["alertname"])
 				nbiClient.CreateNewElement(session, parent, path, "severity", alert.Alert.Labels["severity"])
 				nbiClient.CreateNewElement(session, parent, path, "status", alert.Alert.Labels["status"])
 				nbiClient.CreateNewElement(session, parent, path, "additional-info", alert.Annotations["additional_info"])
