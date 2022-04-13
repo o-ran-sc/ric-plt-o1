@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4d81bb26_a382b5c9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001752
+      },
+      "writtenOn": "2022-04-13T06:22:24Z",
+      "side": 1,
+      "message": "Current code of o1-mediator provides support for only getting gNodeB details in O1 NETCONF client.  \nCode  enhanced to also get eNodeB details in O1 client for the same command as both gNodeBs and eNodeBs could be connected to Near-Rt-Ric at the same time.",
+      "revId": "9c7c7b34d4a8576fe16d28c721576efb6e642d20",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
