@@ -318,3 +318,7 @@ func (m *rnibMock) GetNodeb(invName string) (*xapp.RNIBNodebInfo, xapp.RNIBIRNib
 	}
 	return a.Get(0).(*xapp.RNIBNodebInfo), a.Error(1)
 }
+
+func (m *rnibMock) GetListEnbIds() ([]*xapp.RNIBNbIdentity, xapp.RNIBIRNibError) {
+	return nil, nil
+}
