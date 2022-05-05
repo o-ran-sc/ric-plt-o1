@@ -306,67 +306,65 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	}
 
 	gnbs, err := rnib.GetListGnbIds()
-	if err != nil || len(gnbs) == 0 || len(gnbs) > 0 {
-		//Check if any Enbs are connected to RIC
-		log.Info("Rnib.GetListGnbIds() returned elementCount=%d err:%v", len(gnbs), err)
-		enbs, err2 := rnib.GetListEnbIds()
-			if err2 != nil || len(enbs) == 0 {
-				log.Info("Rnib.GetListEnbIds() returned elementCount=%d err:%v", len(gnbs), err2)
-				log.Error("No Gnbs or Enbs Connected to Ric")
-				return C.SR_ERR_OK
-			} else {
-				log.Info("Getting Enb details from list of Enbs")
-				for _, enb := range enbs {
-					ranName := enb.GetInventoryName()
-					info, err := rnib.GetNodeb(ranName)
-					if err != nil {
-						log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
-						continue
-					}
-
-					prot := nbiClient.E2APProt2Str(int(info.E2ApplicationProtocol))
-					connStat := nbiClient.ConnStatus2Str(int(info.ConnectionStatus))
-					ntype := nbiClient.NodeType2Str(int(info.NodeType))
-
-					log.Info("eNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, enb.GetGlobalNbId().GetPlmnId(), enb.GetGlobalNbId().GetNbId())
-
-					path := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']", ranName)
-					nbiClient.CreateNewElement(session, parent, path, "ran-name", ranName)
-					nbiClient.CreateNewElement(session, parent, path, "ip", info.Ip)
-					nbiClient.CreateNewElement(session, parent, path, "port", fmt.Sprintf("%d", info.Port))
-					nbiClient.CreateNewElement(session, parent, path, "plmn-id", enb.GetGlobalNbId().GetPlmnId())
-					nbiClient.CreateNewElement(session, parent, path, "nb-id", enb.GetGlobalNbId().GetNbId())
-					nbiClient.CreateNewElement(session, parent, path, "e2ap-protocol", prot)
-					nbiClient.CreateNewElement(session, parent, path, "connection-status", connStat)
-					nbiClient.CreateNewElement(session, parent, path, "node", ntype)
-				}
+	log.Info("Rnib.GetListGnbIds() returned elementCount=%d err:%v", len(gnbs), err)
+	if err == nil && len(gnbs) > 0 {
+		for _, gnb := range gnbs {
+			ranName := gnb.GetInventoryName()
+			info, err := rnib.GetNodeb(ranName)
+			if err != nil {
+				log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
+				continue
 			}
-	}
 
-	for _, gnb := range gnbs {
-		ranName := gnb.GetInventoryName()
-		info, err := rnib.GetNodeb(ranName)
-		if err != nil {
-			log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
-			continue
+			prot := nbiClient.E2APProt2Str(int(info.E2ApplicationProtocol))
+			connStat := nbiClient.ConnStatus2Str(int(info.ConnectionStatus))
+			ntype := nbiClient.NodeType2Str(int(info.NodeType))
+
+			log.Info("gNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, gnb.GetGlobalNbId().GetPlmnId(), gnb.GetGlobalNbId().GetNbId())
+
+			path := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']", ranName)
+			nbiClient.CreateNewElement(session, parent, path, "ran-name", ranName)
+			nbiClient.CreateNewElement(session, parent, path, "ip", info.Ip)
+			nbiClient.CreateNewElement(session, parent, path, "port", fmt.Sprintf("%d", info.Port))
+			nbiClient.CreateNewElement(session, parent, path, "plmn-id", gnb.GetGlobalNbId().GetPlmnId())
+			nbiClient.CreateNewElement(session, parent, path, "nb-id", gnb.GetGlobalNbId().GetNbId())
+			nbiClient.CreateNewElement(session, parent, path, "e2ap-protocol", prot)
+			nbiClient.CreateNewElement(session, parent, path, "connection-status", connStat)
+			nbiClient.CreateNewElement(session, parent, path, "node", ntype)
 		}
-
-		prot := nbiClient.E2APProt2Str(int(info.E2ApplicationProtocol))
-		connStat := nbiClient.ConnStatus2Str(int(info.ConnectionStatus))
-		ntype := nbiClient.NodeType2Str(int(info.NodeType))
-
-		log.Info("gNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, gnb.GetGlobalNbId().GetPlmnId(), gnb.GetGlobalNbId().GetNbId())
-
-		path := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']", ranName)
-		nbiClient.CreateNewElement(session, parent, path, "ran-name", ranName)
-		nbiClient.CreateNewElement(session, parent, path, "ip", info.Ip)
-		nbiClient.CreateNewElement(session, parent, path, "port", fmt.Sprintf("%d", info.Port))
-		nbiClient.CreateNewElement(session, parent, path, "plmn-id", gnb.GetGlobalNbId().GetPlmnId())
-		nbiClient.CreateNewElement(session, parent, path, "nb-id", gnb.GetGlobalNbId().GetNbId())
-		nbiClient.CreateNewElement(session, parent, path, "e2ap-protocol", prot)
-		nbiClient.CreateNewElement(session, parent, path, "connection-status", connStat)
-		nbiClient.CreateNewElement(session, parent, path, "node", ntype)
 	}
+
+	//Check if any Enbs are connected to RIC
+	enbs, err2 := rnib.GetListEnbIds()
+	log.Info("Rnib.GetListEnbIds() returned elementCount=%d err:%v", len(gnbs), err)
+	if err2 == nil || len(enbs) > 0 {
+		log.Info("Getting Enb details from list of Enbs")
+		for _, enb := range enbs {
+			ranName := enb.GetInventoryName()
+			info, err := rnib.GetNodeb(ranName)
+			if err != nil {
+				log.Error("GetNodeb() failed for ranName=%s: %v", ranName, err)
+				continue
+			}
+
+			prot := nbiClient.E2APProt2Str(int(info.E2ApplicationProtocol))
+			connStat := nbiClient.ConnStatus2Str(int(info.ConnectionStatus))
+			ntype := nbiClient.NodeType2Str(int(info.NodeType))
+
+			log.Info("eNB info: %s -> %s %s %s -> %s %s", ranName, prot, connStat, ntype, enb.GetGlobalNbId().GetPlmnId(), enb.GetGlobalNbId().GetNbId())
+
+			path := fmt.Sprintf("/o-ran-sc-ric-gnb-status-v1:ric/nodes/node[ran-name='%s']", ranName)
+			nbiClient.CreateNewElement(session, parent, path, "ran-name", ranName)
+			nbiClient.CreateNewElement(session, parent, path, "ip", info.Ip)
+			nbiClient.CreateNewElement(session, parent, path, "port", fmt.Sprintf("%d", info.Port))
+			nbiClient.CreateNewElement(session, parent, path, "plmn-id", enb.GetGlobalNbId().GetPlmnId())
+			nbiClient.CreateNewElement(session, parent, path, "nb-id", enb.GetGlobalNbId().GetNbId())
+			nbiClient.CreateNewElement(session, parent, path, "e2ap-protocol", prot)
+			nbiClient.CreateNewElement(session, parent, path, "connection-status", connStat)
+			nbiClient.CreateNewElement(session, parent, path, "node", ntype)
+		}
+	}
+
 	return C.SR_ERR_OK
 }
 
