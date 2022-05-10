@@ -44,4 +44,6 @@ type SBIClientInterface interface {
 	GetAllPodStatus(namespace string) ([]PodStatus, error)
 
 	GetAlerts() (*alert.GetAlertsOK, error)
+
+	GetAllDeployedXappsConfig() ([]string, []string)
 }

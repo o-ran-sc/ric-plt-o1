@@ -21,6 +21,7 @@ package sbi
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -199,3 +200,38 @@ func (s *SBIClient) GetAlerts() (*alert.GetAlertsOK, error) {
 
 	return resp, nil
 }
+
+func (s *SBIClient) GetAllDeployedXappsConfig() ([]string, []string) {
+
+	//Trigger http rest api to appmgr to get config of all deployed xapps
+	params := apixapp.NewGetAllXappConfigParamsWithTimeout(s.timeout)
+	result, err := s.CreateTransport(s.appmgrAddr).Xapp.GetAllXappConfig(params)
+	if err != nil {
+		log.Error("GetAllDeployedXappsConfig() unsuccessful: %v", err)
+		return nil, nil
+	}
+
+	var xappCfgList []string
+	var xappNameList []string
+	var allXappCfg apimodel.AllXappConfig
+
+	allXappCfg = apimodel.AllXappConfig(result.Payload)
+	for i, xappCfg := range allXappCfg {
+		var xappName string
+		var xappJsonStrCfg string
+		xappName = string(*(xappCfg.Metadata.XappName))
+		xappJsonCfgMap := xappCfg.Config.(map[string]interface{})
+		bs, err := json.Marshal(xappJsonCfgMap)
+		if err != nil {
+			log.Error("json marshal failure after AllXappConfig: %v", err)
+			return nil, nil
+		}
+		xappJsonStrCfg = string(bs)
+		log.Info(" %d %s xapp config json data: %v", i, xappName, xappJsonStrCfg)
+		xappCfgList = append(xappCfgList, xappJsonStrCfg)
+		xappNameList = append(xappNameList, xappName)
+	}
+
+	return xappNameList, xappCfgList
+}
+

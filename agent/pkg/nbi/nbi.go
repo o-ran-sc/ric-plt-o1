@@ -135,6 +135,9 @@ func (n *Nbi) SubscribeStatusData() bool {
 	if ok := n.SubscribeStatus("o-ran-sc-ric-alarm-v1", "/o-ran-sc-ric-alarm-v1:ric/alarms"); !ok {
 		return ok
 	}
+	if ok := n.SubscribeStatus("o-ran-sc-ric-xapp-desc-v1", "/o-ran-sc-ric-xapp-desc-v1:ric/configuration"); !ok {
+		return ok
+	}
 
 	return true
 }
@@ -275,6 +278,12 @@ func nbiGnbStateCB(session *C.sr_session_ctx_t, module *C.char, xpath *C.char, r
 	log.Info("nbiGnbStateCB: module='%s' xpath='%s' rpath='%s' [id=%d]", mod, C.GoString(xpath), C.GoString(rpath), reqid)
 
 	if mod == "o-ran-sc-ric-xapp-desc-v1" {
+
+		if C.GoString(xpath) == "/o-ran-sc-ric-xapp-desc-v1:ric/configuration" {
+			nbGetAllXappsDefCfg(session, parent)
+			return C.SR_ERR_OK
+		}
+
 		xappnamespace := os.Getenv("XAPP_NAMESPACE")
 		if xappnamespace == "" {
 			xappnamespace = "ricxapp"
@@ -458,6 +467,26 @@ func (n *Nbi) testGnbStateCB(module string) bool {
 		return false
 	}
 	return true
+}
+
+func nbGetAllXappsDefCfg(session *C.sr_session_ctx_t, parent **C.char) {
+	var xappNameList []string
+	var xappCfgList []string
+
+	//Get the default config of all deployed xapps from appgmr using rest api
+	xappNameList, xappCfgList = sbiClient.GetAllDeployedXappsConfig()
+	if xappCfgList == nil || len(xappCfgList) == 0 {
+		log.Error("GetAllDeployedXappsConfig() Failure")
+		return
+	}
+	log.Info("GetAllDeployedXappsConfig Success, recvd xapp config")
+
+	//Loop thru the list of recvd xapps for config
+	for i, xappCfg := range xappCfgList {
+		path := fmt.Sprintf("/o-ran-sc-ric-xapp-desc-v1:ric/configuration/xapps/xapp[name='%s']", xappNameList[i])
+		nbiClient.CreateNewElement(session, parent, path, "name", xappNameList[i])
+		nbiClient.CreateNewElement(session, parent, path, "config", xappCfg)
+	}
 }
 
 type iRnib interface {
