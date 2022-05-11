@@ -18,6 +18,23 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "acd1be13_d1adffaa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001752
+      },
+      "writtenOn": "2022-05-11T13:33:51Z",
+      "side": 1,
+      "message": "Below is the o/p of Netconf get alarms command without  fix.\nAlarm-id was incorrect and alarm-text was not sent.\n\n\n \u003c?xml version\u003d\"1.0\" encoding\u003d\"utf-8\"?\u003e\n\u003cdata xmlns\u003d\"urn:ietf:params:xml:ns:netconf:base:1.0\"\u003e\n  \u003cric xmlns\u003d\"urn:o-ran:ric:alarm:1.0\"\u003e\n    \u003calarms\u003e\n      \u003calarm\u003e\n        \u003calarm-id\u003e2\u003c/alarm-id\u003e\n        \u003cseverity\u003eCRITICAL\u003c/severity\u003e\n        \u003cstatus\u003eactive\u003c/status\u003e\n        \u003cadditional-info\u003e-\u003c/additional-info\u003e\n      \u003c/alarm\u003e\n      \u003calarm\u003e\n        \u003calarm-id\u003e1\u003c/alarm-id\u003e\n        \u003cseverity\u003eCRITICAL\u003c/severity\u003e\n        \u003cstatus\u003eactive\u003c/status\u003e\n        \u003cadditional-info\u003e-\u003c/additional-info\u003e\n      \u003c/alarm\u003e\n    \u003c/alarms\u003e\n  \u003c/ric\u003e\n\u003c/data\u003e\n\n\nRegards\nMohammad Arif B\n\n",
+      "revId": "cb925eaa7c70aae28b05dd3cf7fdbe242cff138c",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ef064f72_dd7c1f4f",
