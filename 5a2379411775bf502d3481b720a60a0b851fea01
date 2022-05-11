@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f4702de8_7eaaa953",
+        "filename": "agent/pkg/nbi/nbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1001605
+      },
+      "writtenOn": "2022-05-11T15:34:50Z",
+      "side": 1,
+      "message": "Please add UT to cover new lines of code and functions",
+      "range": {
+        "startLine": 472,
+        "startChar": 5,
+        "endLine": 472,
+        "endChar": 24
+      },
+      "revId": "5a2379411775bf502d3481b720a60a0b851fea01",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d3242f6a_c2caf9b5",
+        "filename": "agent/pkg/sbi/sbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1001605
+      },
+      "writtenOn": "2022-05-11T15:34:50Z",
+      "side": 1,
+      "message": "Please add Unit cases to cover newly introduced functions",
+      "range": {
+        "startLine": 204,
+        "startChar": 20,
+        "endLine": 204,
+        "endChar": 45
+      },
+      "revId": "5a2379411775bf502d3481b720a60a0b851fea01",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
