@@ -67,6 +67,29 @@
       "message": "fault and alarm terms are/can be used interchangeably.",
       "revId": "cb925eaa7c70aae28b05dd3cf7fdbe242cff138c",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "53eaf47b_3523d3dc",
+        "filename": "agent/pkg/nbi/nbi.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1001605
+      },
+      "writtenOn": "2022-05-12T05:53:54Z",
+      "side": 1,
+      "message": "Please add Go test for the newly introduced functions in agent/pkg/nbi/nbi.go under agent/pkg/nbi/nbi_test.go and agent/pkg/sbi/sbi.go under agent/pkg/sbi/sbi_test.go",
+      "range": {
+        "startLine": 432,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 0
+      },
+      "revId": "cb925eaa7c70aae28b05dd3cf7fdbe242cff138c",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
