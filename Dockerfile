@@ -33,7 +33,7 @@ RUN apt-get update -y && apt-get install -y jq \
       libev-dev \
       libprotobuf-c-dev \
       protobuf-c-compiler \
-      libssh-dev \
+      #libssh-dev \
       libssl-dev \
       swig \
       iputils-ping \
@@ -82,7 +82,7 @@ RUN \
       make install && make sr_clean && \
       ldconfig
 
-# libssh 0.8.0
+# libssh Newest
 RUN \
       cd /opt/dev && \
       git clone https://git.libssh.org/projects/libssh.git && cd libssh && \
@@ -113,7 +113,7 @@ RUN \
 # ======================================================================
 
 # RMR
-ARG RMRVERSION=4.8.5
+ARG RMRVERSION=4.9.0
 ARG RMRLIBURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb
 ARG RMRDEVURL=https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb
 
@@ -179,13 +179,19 @@ RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y jq \
       libev-dev \
       libprotobuf-c-dev \
       protobuf-c-compiler \
-      libssh-dev \
+      #libssh-dev \
       libssl-dev \
       swig \
       python-dev \
-      && pip install supervisor-stdout \
-      && pip install psutil \
+      wget \
+      && pip3 install supervisor-stdout \
+      && pip3 install psutil \
       && apt-get clean
+
+# Install psutil for python2.X
+RUN wget https://bootstrap.pypa.io/pip/2.7/get-pip.py \
+    && python get-pip.py \
+    && python -m pip install psutil
 
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -216,6 +222,11 @@ COPY --from=o1mediator-build /usr/local/etc/ /usr/local/etc/
 COPY --from=o1mediator-build /usr/local/bin/ /usr/local/bin/
 COPY --from=o1mediator-build /usr/local/lib/ /usr/local/lib/
 COPY --from=o1mediator-build /usr/local/bin/kubectl /usr/local/bin/kubectl
+
+COPY --from=o1mediator-build /usr/include/libssh/ /usr/include/libssh/
+COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4.9.0 /usr/lib/x86_64-linux-gnu/libssh.so.4.9.0
+# COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4 /usr/lib/x86_64-linux-gnu/libssh.so.4
+COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so /usr/lib/x86_64-linux-gnu/libssh.so
 
 RUN ldconfig
 
