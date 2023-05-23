@@ -224,7 +224,7 @@ COPY --from=o1mediator-build /usr/local/lib/ /usr/local/lib/
 COPY --from=o1mediator-build /usr/local/bin/kubectl /usr/local/bin/kubectl
 
 COPY --from=o1mediator-build /usr/include/libssh/ /usr/include/libssh/
-COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4.9.0 /usr/lib/x86_64-linux-gnu/libssh.so.4.9.0
+COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4.9.0 /usr/lib/x86_64-linux-gnu/libssh.so.4.*
 # COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4 /usr/lib/x86_64-linux-gnu/libssh.so.4
 COPY --from=o1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so /usr/lib/x86_64-linux-gnu/libssh.so
 
