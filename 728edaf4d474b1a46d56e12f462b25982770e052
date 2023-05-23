@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6bbd2341_73dee496",
+        "filename": "Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2023-05-23T04:30:43Z",
+      "side": 1,
+      "message": "could you change this to \n\n--from\u003do1mediator-build /usr/lib/x86_64-linux-gnu/libssh.so.4.* /usr/lib/x86_64-linux-gnu/\n\nSo this doesn\u0027t break immediately if there\u0027s a new minor version.",
+      "range": {
+        "startLine": 227,
+        "startChar": 58,
+        "endLine": 227,
+        "endChar": 112
+      },
+      "revId": "728edaf4d474b1a46d56e12f462b25982770e052",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
