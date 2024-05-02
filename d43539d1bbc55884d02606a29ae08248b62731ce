@@ -1,0 +1,8 @@
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Code-Review+2: Akansha Keshri <akansha.1.keshri@nokia.com>
+Submitted-by: Akansha Keshri <akansha.1.keshri@nokia.com>
+Submitted-at: Thu, 02 May 2024 07:19:28 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/o1/+/12830
+Project: ric-plt/o1
+Branch: refs/heads/master
