@@ -1,0 +1,10 @@
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Verified+1: Abdul Wahid W <abdulwahid.w@nokia.com>
+Code-Review+2: Abdul Wahid W <abdulwahid.w@nokia.com>
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Submitted-by: Abdul Wahid W <abdulwahid.w@nokia.com>
+Submitted-at: Tue, 11 Nov 2025 13:25:36 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/o1/+/15246
+Comments-Total: 1
+Project: ric-plt/o1
+Branch: refs/heads/master
