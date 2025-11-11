@@ -1,6 +1,6 @@
 module gerrit.oran-osc.org/r/ric-plt/o1mediator
 
-go 1.18
+go 1.22
 
 replace gerrit.o-ran-sc.org/r/ric-plt/xapp-frame => gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.9.1
 

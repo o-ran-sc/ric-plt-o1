@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 #----------------------------------------------------------
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 AS o1mediator-build
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu22-c-go:1.0.0 AS o1mediator-build
 
 RUN apt update && apt install --reinstall -y \
   ca-certificates \
@@ -37,11 +37,18 @@ RUN apt-get update -y && apt-get install -y jq \
       libssl-dev \
       swig \
       iputils-ping \
-      python-dev
-#ENV GOLANG_VERSION 1.13.10
-#RUN wget --quiet https://dl.google.com/go/go$GOLANG_VERSION.linux-amd64.tar.gz \
-#        && tar xvzf go$GOLANG_VERSION.linux-amd64.tar.gz -C /usr/local 
-#ENV PATH="/usr/local/go/bin:${PATH}"
+      python-dev-is-python3
+
+ARG GOVERSION="1.22.5"
+RUN wget -nv https://dl.google.com/go/go${GOVERSION}.linux-amd64.tar.gz \
+     && tar -xf go${GOVERSION}.linux-amd64.tar.gz \
+     && mv go /opt/go/${GOVERSION} \
+     && rm -f go*.gz
+
+
+ENV DEFAULTPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=$DEFAULTPATH:/usr/local/go/bin:/opt/go/${GOVERSION}/bin:/root/go/bin
+
 ENV GOPATH="/go"
 
 # ======================================================================
@@ -162,7 +169,7 @@ RUN /usr/local/bin/sysrepoctl -i /go/src/ws/agent/yang/o-ran-sc-ric-alarm-v1.yan
 CMD ["/bin/bash"]
 
 #----------------------------------------------------------
-FROM ubuntu:20.04 as o1mediator
+FROM ubuntu:22.04 as o1mediator
 
 RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y jq \
       net-tools \
@@ -182,7 +189,7 @@ RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y jq \
       #libssh-dev \
       libssl-dev \
       swig \
-      python-dev \
+      python-dev-is-python3 \
       wget \
       && pip3 install supervisor-stdout \
       && pip3 install psutil \
