@@ -12,11 +12,8 @@ require (
 	gerrit.o-ran-sc.org/r/ric-plt/xapp-frame v0.0.0-00010101000000-000000000000
 	github.com/Juniper/go-netconf v0.1.1
 	github.com/basgys/goxml2json v1.1.0
-	github.com/go-openapi/errors v0.19.3
 	github.com/go-openapi/runtime v0.19.7
 	github.com/go-openapi/strfmt v0.19.4
-	github.com/go-openapi/swag v0.19.7
-	github.com/go-openapi/validate v0.19.6
 	github.com/prometheus/alertmanager v0.20.0
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.6.1
@@ -41,10 +38,13 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/analysis v0.19.5 // indirect
+	github.com/go-openapi/errors v0.19.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.3 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/loads v0.19.4 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
+	github.com/go-openapi/swag v0.19.7 // indirect
+	github.com/go-openapi/validate v0.19.6 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/ziutek/telnet v0.0.0-20180329124119-c3b780dc415b // indirect
 	go.mongodb.org/mongo-driver v1.5.1 // indirect
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7 // indirect
-	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/protobuf v1.23.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
